@@ -1,0 +1,104 @@
+{
+ "events": [
+  {
+   "id": 10313972,
+   "url": "https://www.choosechicago.com/event/nomi-gallery-everything-is-bright-all-things-are-beautiful/2026-10-26/",
+   "title": "NoMI Gallery | Everything is Bright. All Things are Beautiful.",
+   "all_day": true,
+   "start_date": "2026-10-26 00:00:00",
+   "end_date": "2026-10-26 23:59:59",
+   "utc_start_date": "2026-10-26 05:00:00",
+   "utc_end_date": "2026-10-27 04:59:59",
+   "timezone": "America/Chicago",
+   "cost": "",
+   "cost_details": {
+    "currency_code": "USD",
+    "values": []
+   },
+   "image": {
+    "url": "https://www.choosechicago.com/uploads/2026/05/2-0010-1.jpg"
+   },
+   "categories": [],
+   "venue": {
+    "venue": "NoMI",
+    "address": "800 N. Michigan Ave",
+    "city": "Chicago"
+   }
+  },
+  {
+   "id": 10315313,
+   "url": "https://www.choosechicago.com/event/we-the-people-life-liberty-and-the-pursuit-of-beauty-in-greektown-chicago/2026-10-26/",
+   "title": "We the People: Life, Liberty and the Pursuit of Beauty in Greektown Chicago",
+   "all_day": true,
+   "start_date": "2026-10-26 00:00:00",
+   "end_date": "2026-10-26 23:59:59",
+   "utc_start_date": "2026-10-26 05:00:00",
+   "utc_end_date": "2026-10-27 04:59:59",
+   "timezone": "America/Chicago",
+   "cost": "Free",
+   "cost_details": {
+    "currency_code": "USD",
+    "values": [
+     "0"
+    ]
+   },
+   "image": {
+    "url": "https://www.choosechicago.com/uploads/2026/06/We-the-People-Greektown-announcement.jpg"
+   },
+   "categories": [],
+   "venue": {
+    "venue": "Greektown Chicago",
+    "address": "300 S. Halsted",
+    "city": "Chicago"
+   }
+  },
+  {
+   "id": 10322518,
+   "url": "https://www.choosechicago.com/event/chicago-by-night-river-lake/2026-10-26/",
+   "title": "Chicago By Night River &amp; Lake",
+   "all_day": true,
+   "start_date": "2026-10-26 00:00:00",
+   "end_date": "2026-10-26 23:59:59",
+   "utc_start_date": "2026-10-26 05:00:00",
+   "utc_end_date": "2026-10-27 04:59:59",
+   "timezone": "America/Chicago",
+   "cost": "$50",
+   "cost_details": {
+    "currency_code": "USD",
+    "values": [
+     "50"
+    ]
+   },
+   "image": {
+    "url": "https://www.choosechicago.com/uploads/2026/09/cbn6.jpg"
+   },
+   "categories": [
+    {
+     "name": "Tours &amp; Attractions",
+     "slug": "tours-attractions"
+    }
+   ],
+   "venue": {
+    "venue": "Chicago&#8217;s First Lady Cruises",
+    "address": "112 E Wacker Drive",
+    "city": "Chicago"
+   }
+  },
+  {
+   "id": 99,
+   "url": "https://www.choosechicago.com/event/no-venue-yet/2026-11-02/",
+   "title": "Venue TBA Show",
+   "utc_start_date": "2026-11-03 01:00:00",
+   "utc_end_date": null,
+   "cost": "",
+   "cost_details": {
+    "values": []
+   },
+   "image": false,
+   "categories": [],
+   "venue": []
+  }
+ ],
+ "total": 4,
+ "total_pages": 1
+}

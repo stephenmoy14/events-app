@@ -1,0 +1,52 @@
+# City config. A new city = a new file like this, no code changes.
+# Each key under `sources` must match a row in the `sources` table (see db/migrations).
+# `fetcher` picks the code that reads it (defaults to the key); `delay_seconds` sets the
+# pause between requests to that site.
+city: chicago
+display_name: Chicago
+timezone: America/Chicago
+window_days: 35          # fetch window; the app shows 30
+state_code: IL
+country_code: US
+
+sources:
+  ticketmaster:
+    enabled: true
+    cadence: daily
+    params:
+      city: Chicago
+      stateCode: IL
+
+  eventbrite:
+    enabled: true        # turn on once you've added some IDs below
+    cadence: daily
+    include_online: false
+    # Find IDs with: python -m events_pipeline.eventbrite_lookup <event URL>
+    venue_ids: [
+      89846849, 300082505, 185202199
+    ]         # e.g. - "12345678"   # Venue name
+    organizer_ids: [
+      27338423695, 16575466715, 18677495634
+    ]     # best effort: older, undocumented endpoint
+
+  chicago_public_library:
+    enabled: true
+    fetcher: bibliocommons
+    cadence: weekly
+    library: chipublib
+    delay_seconds: 10     # ~37 pages a run, about 6 minutes
+    include_online: false
+
+  choose_chicago:
+    enabled: true
+    fetcher: tribe_events
+    cadence: weekly
+    base_url: https://www.choosechicago.com
+    delay_seconds: 20     # robots.txt Crawl-delay; ~40 pages, about 13 minutes
+
+  # Any other WordPress site running The Events Calendar works the same way:
+  # some_venue:
+  #   enabled: false
+  #   fetcher: tribe_events
+  #   cadence: daily
+  #   base_url: https://example.com

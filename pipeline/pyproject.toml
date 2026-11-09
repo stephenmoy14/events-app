@@ -1,0 +1,27 @@
+[project]
+name = "events-pipeline"
+version = "0.1.0"
+description = "Collects city events from APIs and venue pages into Postgres"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.6",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0",
+    "pyyaml>=6.0",
+    "tzdata; sys_platform == 'win32'",  # Windows has no built-in time zone database
+]
+
+[project.optional-dependencies]
+scrape = ["selectolax>=0.3", "icalendar>=5.0"]
+dev = ["pytest>=8.0", "ruff>=0.4"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,122 @@
+{
+ "_note": "Hand-written from Eventbrite's documented event object (no live response captured yet). Replace with a real response once you have a token.",
+ "pagination": {
+  "object_count": 3,
+  "page_number": 1,
+  "page_size": 50,
+  "page_count": 1,
+  "has_more_items": false
+ },
+ "events": [
+  {
+   "id": "900000000001",
+   "name": {
+    "text": "Late Night Jazz &amp; Soul"
+   },
+   "url": "https://www.eventbrite.com/e/late-night-jazz-soul-tickets-900000000001",
+   "start": {
+    "timezone": "America/Chicago",
+    "local": "2026-11-07T21:00:00",
+    "utc": "2026-11-08T03:00:00Z"
+   },
+   "end": {
+    "timezone": "America/Chicago",
+    "local": "2026-11-07T23:30:00",
+    "utc": "2026-11-08T05:30:00Z"
+   },
+   "status": "live",
+   "is_free": false,
+   "online_event": false,
+   "logo": {
+    "url": "https://img.evbuc.com/cropped.jpg",
+    "original": {
+     "url": "https://img.evbuc.com/original.jpg"
+    }
+   },
+   "venue": {
+    "id": "55500001",
+    "name": "Example Lounge",
+    "latitude": "41.9100",
+    "longitude": "-87.6770",
+    "address": {
+     "address_1": "1234 N Milwaukee Ave",
+     "city": "Chicago",
+     "region": "IL",
+     "postal_code": "60622"
+    }
+   },
+   "category": {
+    "name": "Music"
+   },
+   "ticket_availability": {
+    "minimum_ticket_price": {
+     "currency": "USD",
+     "major_value": "15.00"
+    },
+    "maximum_ticket_price": {
+     "currency": "USD",
+     "major_value": "25.00"
+    }
+   }
+  },
+  {
+   "id": "900000000002",
+   "name": {
+    "text": "Free Community Yoga"
+   },
+   "url": "https://www.eventbrite.com/e/free-community-yoga-tickets-900000000002",
+   "start": {
+    "utc": "2026-11-08T15:00:00Z"
+   },
+   "end": {
+    "utc": "2026-11-08T16:00:00Z"
+   },
+   "status": "live",
+   "is_free": true,
+   "online_event": false,
+   "logo": null,
+   "venue": {
+    "name": "Humboldt Park Boathouse",
+    "address": {
+     "address_1": "1301 N Humboldt Dr",
+     "city": "Chicago",
+     "region": "IL"
+    }
+   },
+   "ticket_availability": {}
+  },
+  {
+   "id": "900000000003",
+   "name": {
+    "text": "Organizer's Milwaukee Show"
+   },
+   "url": "https://www.eventbrite.com/e/milwaukee-show-tickets-900000000003",
+   "start": {
+    "utc": "2026-11-09T01:00:00Z"
+   },
+   "status": "live",
+   "is_free": false,
+   "online_event": false,
+   "venue": {
+    "name": "Somewhere in Milwaukee",
+    "address": {
+     "city": "Milwaukee",
+     "region": "WI"
+    }
+   }
+  },
+  {
+   "id": "900000000004",
+   "name": {
+    "text": "Online Workshop"
+   },
+   "url": "https://www.eventbrite.com/e/online-workshop-tickets-900000000004",
+   "start": {
+    "utc": "2026-11-10T00:00:00Z"
+   },
+   "status": "live",
+   "is_free": true,
+   "online_event": true
+  }
+ ]
+}

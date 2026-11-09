@@ -1,0 +1,141 @@
+{
+ "events": {
+  "items": [
+   "6ac01b8c377296003a494758",
+   "6971383a2c65973d001924d9",
+   "6a88baf73b6c71003e5a7877",
+   "cancelled01"
+  ],
+  "pagination": {
+   "count": 4,
+   "pages": 1,
+   "page": 1,
+   "limit": 100
+  }
+ },
+ "entities": {
+  "events": {
+   "6ac01b8c377296003a494758": {
+    "id": "6ac01b8c377296003a494758",
+    "key": "2026-10-27T15:30:00",
+    "definition": {
+     "start": "2026-10-27T15:30",
+     "end": "2026-10-27T17:30",
+     "title": "Meet the Maker: Redemptive Plastics",
+     "description": "<p>Drop-in to meet the maker-in-residence…</p>",
+     "branchLocationId": "90",
+     "nonBranchLocationId": null,
+     "locationDetails": "Maker Lab",
+     "typeIds": [
+      "53f20457e04c1e3b1c00d0a9"
+     ],
+     "isCancelled": false
+    },
+    "indexStart": "2026-10-27T20:30:00Z",
+    "indexEnd": "2026-10-27T22:30:00Z",
+    "isRecurring": true
+   },
+   "6971383a2c65973d001924d9": {
+    "id": "6971383a2c65973d001924d9",
+    "key": "2026-11-04T13:00:00",
+    "definition": {
+     "start": "2026-11-04T13:00",
+     "end": "2026-11-04T18:00",
+     "title": "Basic Computer Skills Help",
+     "branchLocationId": "18",
+     "nonBranchLocationId": null,
+     "locationDetails": "2nd floor computer lab",
+     "typeIds": [
+      "53f203f8e04c1e3b1c00d085"
+     ],
+     "isCancelled": false
+    },
+    "indexStart": "2026-11-04T19:00:00Z",
+    "indexEnd": "2026-11-05T00:00:00Z",
+    "isRecurring": true
+   },
+   "6a88baf73b6c71003e5a7877": {
+    "id": "6a88baf73b6c71003e5a7877",
+    "key": "2026-12-03T17:00:00",
+    "definition": {
+     "start": "2026-12-03T17:00",
+     "end": "2026-12-03T19:00",
+     "title": "Homework Help: Virtual Teacher in the Library",
+     "branchLocationId": null,
+     "nonBranchLocationId": null,
+     "locationDetails": null,
+     "typeIds": [
+      "53f20478e04c1e3b1c00d0b5"
+     ],
+     "isVirtual": true,
+     "isCancelled": false
+    },
+    "indexStart": "2026-12-03T23:00:00Z",
+    "indexEnd": "2026-12-04T01:00:00Z",
+    "isRecurring": true
+   },
+   "cancelled01": {
+    "id": "cancelled01",
+    "definition": {
+     "start": "2026-11-10T10:00",
+     "title": "Cancelled Storytime",
+     "branchLocationId": "18",
+     "isCancelled": true
+    },
+    "indexStart": "2026-11-10T16:00:00Z"
+   }
+  },
+  "locations": {
+   "18": {
+    "id": "18",
+    "name": "Chicago Bee",
+    "address": {
+     "number": "3647",
+     "street": "S. State Street",
+     "city": "Chicago",
+     "state": "IL",
+     "zip": "60609"
+    },
+    "mapLocation": {
+     "centrePoint": {
+      "lng": -87.626315,
+      "lat": 41.82818
+     },
+     "timeZone": "America/Chicago"
+    }
+   },
+   "90": {
+    "id": "90",
+    "name": "Obama Presidential Center",
+    "address": {
+     "number": "6021",
+     "street": "S. Stony Island Avenue",
+     "city": "Chicago",
+     "state": "IL",
+     "zip": "60637"
+    },
+    "mapLocation": {
+     "centrePoint": {
+      "lng": -87.5863592,
+      "lat": 41.7860431
+     },
+     "timeZone": "America/Chicago"
+    }
+   }
+  },
+  "eventTypes": {
+   "53f203f8e04c1e3b1c00d085": {
+    "id": "53f203f8e04c1e3b1c00d085",
+    "name": "Computers and Technology"
+   },
+   "53f20457e04c1e3b1c00d0a9": {
+    "id": "53f20457e04c1e3b1c00d0a9",
+    "name": "Lectures"
+   },
+   "53f20478e04c1e3b1c00d0b5": {
+    "id": "53f20478e04c1e3b1c00d0b5",
+    "name": "Workshops"
+   }
+  }
+ }
+}

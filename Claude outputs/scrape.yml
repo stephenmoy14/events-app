@@ -1,0 +1,50 @@
+name: Daily scrape
+
+on:
+  schedule:
+    # 10:17 UTC = 4:17am Chicago in winter, 5:17am in summer. GitHub may start it a bit late.
+    - cron: "17 10 * * *"
+  workflow_dispatch:            # "Run workflow" button on the Actions tab
+    inputs:
+      source:
+        description: "Run just this source (blank = every source that's due)"
+        required: false
+        default: ""
+      force:
+        description: "Run every enabled source, ignoring daily/weekly cadence"
+        type: boolean
+        default: false
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false     # never run two scrapes at once
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/pyproject.toml
+      - run: pip install -e .
+      - name: Run pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          EVENTBRITE_TOKEN: ${{ secrets.EVENTBRITE_TOKEN }}
+          USER_AGENT: ${{ vars.USER_AGENT }}
+          # Workflow inputs go through env vars, never pasted straight into the script.
+          SOURCE: ${{ inputs.source }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          args=()
+          if [ -n "$SOURCE" ]; then args+=(--source "$SOURCE"); fi
+          if [ "$FORCE" = "true" ]; then args+=(--force); fi
+          python -m events_pipeline.run "${args[@]}"
