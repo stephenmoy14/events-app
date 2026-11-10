@@ -68,8 +68,32 @@ _TITLE_RULES = [
     ("nightlife", re.compile(r"trivia|karaoke|\bdrag\b", re.I)),
     ("outdoors", re.compile(r"cruise|walking tour|boat tour|\bhike\b|bird walk", re.I)),
     ("learning", re.compile(r"workshop|\bclass\b|lecture|seminar", re.I)),
-    ("arts", re.compile(r"museum|exhibit|gallery", re.I)),
+    ("arts", re.compile(r"museum|exhibit|gallery|paint|craft|drawing", re.I)),
+    ("theater", re.compile(r"\bmusical\b|\bplay\b.*\bact\b|theat(er|re) production|\bopera\b", re.I)),
 ]
+
+# Exact labels (mostly Chicago Public Library types) that the keyword rules get wrong,
+# e.g. "Crafts, Games and Play" would match "play" → theater.
+_EXACT_LABELS = {
+    "crafts, games and play": "arts",
+    "art, music and performances": "arts",      # ambiguous: the title decides first
+    "writing and poetry": "arts",
+    "story time": "family",
+    "diy": "learning",
+    "workshops": "learning",
+    "lectures": "learning",
+    "computers and technology": "learning",
+    "health and science": "learning",
+    "jobs and careers": "learning",
+    "continuing education and college": "learning",
+    "history and genealogy": "learning",
+    "business, law and money": "learning",
+    "book clubs": "learning",
+    "celebrations": "community",
+    "tours": "outdoors",
+}
+# For these, a clear signal in the title (a concert, a play, stand-up) beats the label.
+_TITLE_FIRST = {"art, music and performances"}
 
 # Labels that mean "no label" (Ticketmaster uses these for unclassified events).
 _EMPTY_LABELS = {"undefined", "miscellaneous", "other", "n/a"}
@@ -78,8 +102,17 @@ _EMPTY_LABELS = {"undefined", "miscellaneous", "other", "n/a"}
 def category_group(raw: str | None, title: str | None = None) -> str:
     """Map a source's category label (or, failing that, the title) to a fixed group."""
     if raw:
-        parts = [p.strip() for p in raw.split("/") if p.strip().lower() not in _EMPTY_LABELS and p.strip()]
+        parts = [p.strip() for p in raw.split(" / ") if p.strip() and p.strip().lower() not in _EMPTY_LABELS]
+        lowered = [p.lower() for p in parts]
+        if "story time" in lowered:
+            return "family"
+        if title and any(p in _TITLE_FIRST for p in lowered):
+            for group, rx in _TITLE_RULES:
+                if group in ("music", "theater", "comedy") and rx.search(title):
+                    return group
         for part in reversed(parts):
+            if part.lower() in _EXACT_LABELS:
+                return _EXACT_LABELS[part.lower()]
             for group, rx in _COMPILED:
                 if rx.search(part):
                     return group

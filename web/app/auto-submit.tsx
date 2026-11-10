@@ -11,9 +11,11 @@ export function AutoSubmit({ formId }: { formId: string }) {
     const onChange = (e: Event) => {
       const t = e.target as HTMLInputElement;
       if (t.type === "search" || t.type === "text") return; // search waits for Enter
-      // Drop "show more" when filters change.
-      const limit = form.querySelector<HTMLInputElement>('input[name="limit"]');
-      if (limit) limit.disabled = true;
+      // A new date range starts at its first day.
+      if (t.name === "when") {
+        const day = form.querySelector<HTMLInputElement>('input[name="day"]');
+        if (day) day.disabled = true;
+      }
       form.requestSubmit();
     };
     form.addEventListener("change", onChange);

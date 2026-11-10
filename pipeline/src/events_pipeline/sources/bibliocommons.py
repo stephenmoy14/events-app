@@ -97,6 +97,6 @@ class BiblioCommonsFetcher(Fetcher):
             is_free=True,
             price_min=0,
             price_max=0,
-            category=type_names[0] if type_names else None,
+            category=" / ".join(type_names) or None,     # all of the library's labels
             url=f"https://{self.library}.bibliocommons.com/events/{raw['id']}",
         )

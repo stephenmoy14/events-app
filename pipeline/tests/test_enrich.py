@@ -70,3 +70,13 @@ def test_out_of_area_and_zero_price():
     assert in_area(Event(**base), city)                                  # no coordinates: keep
     [out] = enrich([Event(**base, price_min=0, price_max=0)], None)
     assert out.is_free is True
+
+
+def test_library_labels():
+    assert category_group("Art, Music and Performances", "Tote Bag Painting") == "arts"
+    assert category_group("Art, Music and Performances", "Jazz Quartet Concert") == "music"
+    assert category_group("Crafts, Games and Play", "Teen Paint and Sip") == "arts"
+    assert category_group("Crafts, Games and Play / Story Time", "Storytime and Crafts") == "family"
+    assert category_group("Crafts, Games and Play / DIY", "Diamond Painting Compact Mirror") == "learning"
+    assert category_group("Continuing Education and College / Jobs and Careers", "Resume Help") == "learning"
+    assert category_group("Celebrations", "Diwali Party") == "community"

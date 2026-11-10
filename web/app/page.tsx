@@ -1,6 +1,8 @@
 import { category, SOURCE_NAMES } from "@/lib/categories";
-import { chicagoDate, dayHeading, formatTime, isAllDay, WHEN_OPTIONS } from "@/lib/dates";
-import { type EventRow, type Filters, getEvents, getNeighborhoods, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
+import { chicagoDate, chicagoMidnight, formatTime, isAllDay, TZ } from "@/lib/dates";
+import { type DayView, type EventRow, type Filters, getDayView, getNeighborhoods, hrefWith, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
+import { Calendar } from "./calendar";
+import { DayPager, DayStrip, dayLabel } from "./day-strip";
 import { FilterForm } from "./filters";
 import { Star } from "./star";
 
@@ -8,17 +10,23 @@ export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
+const longDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric" });
+const shortDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
+
 export default async function Page({ searchParams }: Props) {
   const filters = parseFilters(await searchParams);
-  let listing: Awaited<ReturnType<typeof getEvents>>;
+  let view: DayView;
   let neighborhoods: string[];
   try {
-    [listing, neighborhoods] = await Promise.all([getEvents(filters), getNeighborhoods()]);
+    [view, neighborhoods] = await Promise.all([getDayView(filters), getNeighborhoods()]);
   } catch (err) {
     return <LoadFailed err={err} />;
   }
-  const days = groupByDay(listing.events, listing.from);
-  const whenLabel = WHEN_OPTIONS.find((w) => w.key === filters.when)!.label.toLowerCase();
+  const { today, day, days, counts, events, total } = view;
+  const dayStart = chicagoMidnight(day).toISOString();
+  const ongoing = events.filter((e) => e.start_at < dayStart);
+  const onDay = events.filter((e) => e.start_at >= dayStart);
+  const name = dayLabel(day, today);
 
   return (
     <div className="shell">
@@ -29,40 +37,69 @@ export default async function Page({ searchParams }: Props) {
         </h1>
         <div className="stripes" aria-hidden="true" />
         <p className="summary" aria-live="polite">
-          {listing.total.toLocaleString("en-US")} {listing.total === 1 ? "event" : "events"} {phrase(filters.when, whenLabel)}
+          {total.toLocaleString("en-US")} {total === 1 ? "event" : "events"}
+          {day === today ? " left today" : ` on ${name}, ${longDate.format(chicagoMidnight(day))}`}
           {filters.neighborhood ? ` in ${filters.neighborhood}` : ""}
           {filters.q ? ` matching “${filters.q}”` : ""}
         </p>
-        {listing.sample ? (
+        {view.sample ? (
           <p className="notice">Showing built-in sample events. Set SUPABASE_URL and SUPABASE_ANON_KEY to load real listings.</p>
         ) : null}
       </header>
 
       <aside className="sidebar">
-        <FilterForm filters={filters} neighborhoods={neighborhoods} />
+        <FilterForm filters={filters} day={day} neighborhoods={neighborhoods} />
+        <Calendar f={filters} today={today} day={day} days={days} counts={counts} />
       </aside>
 
-      <main className="line" id="events">
-        {days.length === 0 ? (
-          <div className="empty">
-            <h2>Nothing matches these filters</h2>
-            <p>Try a longer time range, fewer categories, or a different neighborhood.</p>
-            <a href={`/?when=month`}>Show everything in the next 30 days</a>
-          </div>
-        ) : (
-          days.map(([ymd, events]) => <Day key={ymd} ymd={ymd} today={listing.today} events={events} />)
-        )}
+      <main className="line-area" id="events">
+        <DayStrip f={filters} days={days} day={day} today={today} counts={counts} />
 
-        {listing.events.length < listing.total ? (
-          <div className="more">
-            <a href={moreHref(filters, `ev-${listing.events[listing.events.length - 1]?.id}`)}>
-              Show {Math.min(PAGE_SIZE, listing.total - listing.events.length)} more
-            </a>
-            <span>
-              {listing.events.length.toLocaleString("en-US")} of {listing.total.toLocaleString("en-US")} shown
-            </span>
-          </div>
-        ) : null}
+        <div className="line">
+          <section className={day === today ? "stop today" : "stop"} aria-labelledby="day-heading">
+            <h2 id="day-heading">
+              <span className="marker" aria-hidden="true">{day === today ? <Star /> : null}</span>
+              <span className="day">{name}</span>
+              <span className="date">{longDate.format(chicagoMidnight(day))}</span>
+            </h2>
+
+            {events.length === 0 ? (
+              <div className="empty">
+                <h3>Nothing on {name.toLowerCase() === "today" ? "today" : name} with these filters</h3>
+                <p>Pick another day above, or loosen the filters.</p>
+                <a href={hrefWith(filters, { categories: [], free: false, neighborhood: "", q: "", limit: PAGE_SIZE })}>
+                  Show everything on {name}
+                </a>
+              </div>
+            ) : (
+              <ul className="events">
+                {sortForDay(onDay).map((e) => <EventItem key={e.id} e={e} />)}
+              </ul>
+            )}
+
+            {ongoing.length > 0 ? (
+              <>
+                <h3 className="sub">Still running</h3>
+                <ul className="events">
+                  {ongoing.map((e) => <EventItem key={e.id} e={e} untilFor={day} />)}
+                </ul>
+              </>
+            ) : null}
+          </section>
+
+          {events.length < total ? (
+            <div className="more">
+              <a href={hrefWith(filters, { day, limit: filters.limit + PAGE_SIZE }, `#ev-${events[events.length - 1]?.id}`)}>
+                Show {Math.min(PAGE_SIZE, total - events.length)} more
+              </a>
+              <span>
+                {events.length.toLocaleString("en-US")} of {total.toLocaleString("en-US")} shown
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <DayPager f={filters} days={days} day={day} today={today} />
       </main>
 
       <footer className="colophon">
@@ -75,66 +112,29 @@ export default async function Page({ searchParams }: Props) {
   );
 }
 
-function phrase(when: Filters["when"], label: string) {
-  if (when === "today") return "today";
-  if (when === "weekend") return "this weekend";
-  return `in the ${label}`; // "in the next 7 days"
-}
-
-function moreHref(f: Filters, anchor: string) {
-  const p = new URLSearchParams();
-  p.set("when", f.when);
-  f.categories.forEach((c) => p.append("cat", c));
-  if (f.free) p.set("free", "1");
-  if (f.neighborhood) p.set("hood", f.neighborhood);
-  if (f.q) p.set("q", f.q);
-  p.set("limit", String(f.limit + PAGE_SIZE));
-  return `/?${p}#${anchor}`;
-}
-
-function groupByDay(events: EventRow[], from: string): [string, EventRow[]][] {
-  const map = new Map<string, EventRow[]>();
-  for (const e of events) {
-    const d = chicagoDate(new Date(e.start_at));
-    const key = d < from ? from : d; // something already under way sits on the first day
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(e);
-  }
-  for (const list of map.values()) {
-    list.sort((a, b) => Number(isAllDay(b.start_at, b.end_at)) - Number(isAllDay(a.start_at, a.end_at)) || a.start_at.localeCompare(b.start_at));
-  }
-  return [...map.entries()];
-}
-
-function Day({ ymd, today, events }: { ymd: string; today: string; events: EventRow[] }) {
-  const { name, date } = dayHeading(ymd, today);
-  const isToday = ymd === today;
-  return (
-    <section className={isToday ? "stop today" : "stop"} aria-labelledby={`d-${ymd}`}>
-      <h2 id={`d-${ymd}`}>
-        <span className="marker" aria-hidden="true">{isToday ? <Star /> : null}</span>
-        <span className="day">{name}</span>
-        <span className="date">{date}</span>
-      </h2>
-      <ul className="events">
-        {events.map((e) => (
-          <EventItem key={e.id} e={e} />
-        ))}
-      </ul>
-    </section>
+function sortForDay(list: EventRow[]) {
+  // All-day listings first, then by start time.
+  return [...list].sort(
+    (a, b) => Number(isAllDay(b.start_at, b.end_at)) - Number(isAllDay(a.start_at, a.end_at)) || a.start_at.localeCompare(b.start_at),
   );
 }
 
-function EventItem({ e }: { e: EventRow }) {
+function EventItem({ e, untilFor }: { e: EventRow; untilFor?: string }) {
   const cat = category(e.category_group);
   const allDay = isAllDay(e.start_at, e.end_at);
   const where = [e.venue_name, e.neighborhood && !e.venue_name?.includes(e.neighborhood) ? e.neighborhood : null]
     .filter(Boolean)
     .join(", ");
   const price = priceText(e);
+  let when = allDay ? "All day" : formatTime(e.start_at);
+  if (untilFor && e.end_at) {
+    // Started on an earlier day: show when it ends instead of when it began.
+    const end = new Date(e.end_at);
+    when = chicagoDate(end) === untilFor ? `Until ${formatTime(e.end_at)}` : `Until ${shortDate.format(end)}`;
+  }
   return (
     <li className="event" id={`ev-${e.id}`}>
-      <time className="time" dateTime={e.start_at}>{allDay ? "All day" : formatTime(e.start_at)}</time>
+      <time className="time" dateTime={e.start_at}>{when}</time>
       <div className="body">
         <a className="title" href={e.url} target="_blank" rel="noopener noreferrer">
           {e.title}
@@ -167,7 +167,7 @@ function LoadFailed({ err }: { err: unknown }) {
   const known = err instanceof LoadError;
   return (
     <div className="shell">
-      <main className="line">
+      <main className="line-area">
         <div className="empty">
           <h2>Events didn’t load</h2>
           <p>{known ? err.message : "The event database didn’t answer."}</p>

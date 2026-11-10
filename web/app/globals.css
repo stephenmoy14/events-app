@@ -59,7 +59,7 @@ a { color: inherit; }
 }
 .masthead { grid-area: head; }
 .sidebar { grid-area: side; }
-.line { grid-area: main; }
+.line-area { grid-area: main; min-width: 0; }
 .colophon { grid-area: foot; }
 
 @media (min-width: 960px) {
@@ -213,7 +213,14 @@ legend {
   box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
 }
 
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pair { display: flex; flex-wrap: wrap; gap: 18px 24px; align-items: flex-start; }
+.where { display: grid; }
+.where .legend {             /* a <label>, styled like the fieldset legends */
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-stretch: 112%;
+}
 .hood select {
   font: inherit;
   font-size: 15px;
@@ -236,7 +243,7 @@ legend {
 
 .line {
   position: relative;
-  margin-top: 16px;
+  margin-top: 8px;
   padding-bottom: 8px;
 }
 .line::before {
@@ -356,6 +363,167 @@ legend {
   .time { font-size: 18px; }
 }
 
+.sub {
+  margin: 20px 0 4px calc(var(--rail) + 24px);
+  font-size: 17px;
+  font-weight: 700;
+  font-stretch: 112%;
+  color: var(--muted);
+}
+
+/* ---------- day strip: the range as a horizontal stretch of line ---------- */
+
+.strip {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 4px;
+  margin: 18px 0 4px;
+}
+.strip .arrow {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--surface);
+}
+.strip a.arrow:hover { background: var(--ink); color: #fff; }
+.strip .arrow.off { border-color: var(--rule); color: var(--rule); }
+
+.stops {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  position: relative;
+}
+.stops::-webkit-scrollbar { display: none; }
+.stops li { flex: 1 0 64px; scroll-snap-align: center; position: relative; }
+/* the track: each stop draws its own segment so it scrolls with them */
+.stops li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 33px;
+  height: 6px;
+  background: var(--line);
+}
+.stops li:first-child::before { left: 50%; }
+.stops li:last-child::before { right: 50%; }
+.stops a {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 4px 2px 6px;
+  text-decoration: none;
+  color: var(--ink);
+  border-radius: 10px;
+}
+.stops .wk { font-size: 13px; font-weight: 600; font-stretch: 87%; color: var(--muted); }
+.stops .node {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 4px solid var(--ink);
+  display: grid;
+  place-items: center;
+  color: var(--star);
+}
+.stops li:first-child .node:has(svg) { border: 0; background: var(--paper); }
+.stops .node:has(svg) { border: 0; background: var(--paper); }
+.stops .num { font-size: 20px; font-weight: 800; font-stretch: 112%; line-height: 1.1; }
+.stops .n { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stops a:hover .num { text-decoration: underline; text-underline-offset: 3px; }
+.stops a.current { background: var(--ink); color: #fff; }
+.stops a.current .wk,
+.stops a.current .n { color: #cfe3ee; }
+.stops a.current .node { border-color: #fff; background: var(--ink); }
+.stops a.current .node:has(svg) { background: var(--ink); }
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 0 calc(var(--rail) + 24px);
+}
+.pager a {
+  font-weight: 700;
+  padding: 9px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.pager a:hover { background: var(--ink); color: #fff; }
+
+/* ---------- calendar ---------- */
+
+.calendar { margin: 22px 0 0; }
+.calendar > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 2px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  list-style: none;
+}
+.calendar > summary::-webkit-details-marker { display: none; }
+.calendar > summary::after { content: "▾"; font-size: 12px; }
+.calendar[open] > summary::after { content: "▴"; }
+@media (min-width: 960px) {
+  .calendar > summary { border: 0; padding: 0; background: none; font-size: 14px; font-weight: 700; font-stretch: 112%; cursor: default; pointer-events: none; }
+  .calendar > summary::after { content: none; }
+}
+
+.month { border-collapse: collapse; margin-top: 12px; width: 100%; max-width: 340px; table-layout: fixed; }
+.month caption { text-align: left; font-weight: 700; font-stretch: 112%; padding-bottom: 6px; }
+.month th { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 4px; }
+.month td { text-align: center; padding: 1px; height: 42px; vertical-align: top; }
+.month a,
+.month .dn.out,
+.month .dn.empty-day {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 3px;
+  height: 40px;
+  padding-top: 5px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+}
+.month a:hover { background: #e4edf3; }
+.month .dn.out { color: #b3bec8; }
+.month .dn.empty-day { color: var(--muted); }
+.month td.today .dn { color: var(--star); font-weight: 800; }
+.month td.sel a { background: var(--ink); color: #fff; }
+.month td.sel .busy { background: #fff; }
+.busy { border-radius: 50%; background: var(--line); }
+.busy.l1 { width: 5px; height: 5px; }
+.busy.l2 { width: 8px; height: 8px; }
+.busy.l3 { width: 11px; height: 11px; background: #1d8fc0; }
+.cal-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+
 /* ---------- more, empty, footer ---------- */
 
 .more {
@@ -381,7 +549,8 @@ legend {
   margin-left: calc(var(--rail) + 24px);
   padding: 8px 0 24px;
 }
-.empty h2 { margin: 0 0 6px; font-size: 22px; font-stretch: 112%; }
+.empty h2,
+.empty h3 { margin: 0 0 6px; font-size: 22px; font-stretch: 112%; }
 .empty p { margin: 0 0 12px; color: var(--muted); }
 .empty a { font-weight: 700; }
 
