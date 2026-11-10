@@ -15,6 +15,7 @@ from .base import Fetcher
 
 GATEWAY = "https://gateway.bibliocommons.com/v2/libraries/{library}/events"
 PAGE_SIZE = 100
+DEFAULT_SKIP_TYPES = ["Library Closures"]
 
 
 def _utc(value: str | None) -> datetime | None:
@@ -59,6 +60,10 @@ class BiblioCommonsFetcher(Fetcher):
         d = raw.get("definition", {})
         if d.get("isCancelled"):
             return None
+        type_names = [types[t]["name"] for t in d.get("typeIds", []) if t in types]
+        skip = {t.lower() for t in self.cfg.get("skip_types", DEFAULT_SKIP_TYPES)}
+        if any(t.lower() in skip for t in type_names):
+            return None                      # e.g. "Library Closures" notices aren't events
         is_virtual = bool(d.get("isVirtual")) or not (d.get("branchLocationId") or d.get("nonBranchLocationId"))
         if is_virtual and not self.cfg.get("include_online", False):
             return None
@@ -78,7 +83,6 @@ class BiblioCommonsFetcher(Fetcher):
         venue = f"Chicago Public Library – {loc['name']}" if loc.get("name") else None
         if venue and d.get("locationDetails"):
             venue = f"{venue} ({d['locationDetails']})"
-        type_names = [types[t]["name"] for t in d.get("typeIds", []) if t in types]
 
         return Event(
             source=self.source_name,

@@ -12,6 +12,11 @@ Separate showtimes stay separate: a 2pm and an 8pm show never merge. An all-day 
 Chicago lists shows as all-day) is hidden under the earliest matching timed showtime instead of
 gluing the showtimes together.
 
+Timed-entry tickets (a museum or light show listed as a separate "event" every 30 minutes)
+collapse first: when one source lists the same title at the same venue at least
+TIMED_ENTRY_MIN_SLOTS times on one day, only the earliest slot stays visible. Two or three
+showtimes a day are treated as real separate shows.
+
 The best listing in each group stays visible: timed over all-day, then by source order in the
 city config (Ticketmaster first). The rest get duplicate_of = that listing's id.
 
@@ -33,6 +38,7 @@ TIME_TOLERANCE = timedelta(minutes=30)
 SAME_SOURCE_TOLERANCE = timedelta(minutes=5)
 MAX_DISTANCE_KM = 1.0
 TITLE_JACCARD = 0.75
+TIMED_ENTRY_MIN_SLOTS = 4   # same title + venue + source, this many start times in one day
 
 _STOP = {"the", "a", "an", "and", "of", "at", "in", "on", "for", "with", "to", "live",
          "presents", "presented", "by", "tickets", "ticket", "show", "event", "featuring", "feat", "ft"}
@@ -117,6 +123,25 @@ def is_match(a: Listing, b: Listing) -> bool:
     return times_match(a, b) and titles_match(a, b) and venues_match(a, b)
 
 
+def collapse_timed_entry(items: list[Listing]) -> dict[str, str]:
+    """{hidden slot id: earliest slot id} for timed-entry listings (see module docstring)."""
+    buckets: dict[tuple, list[Listing]] = {}
+    for it in items:
+        if it.all_day or not it.words:
+            continue
+        key = (it.source, it.words, it.venue_words, it.local_date)
+        buckets.setdefault(key, []).append(it)
+    hidden: dict[str, str] = {}
+    for group in buckets.values():
+        starts = {g.start_at for g in group}
+        if len(starts) < TIMED_ENTRY_MIN_SLOTS:
+            continue
+        group.sort(key=lambda g: (g.start_at, g.id))
+        for g in group[1:]:
+            hidden[g.id] = group[0].id
+    return hidden
+
+
 class _UnionFind:
     def __init__(self):
         self.parent: dict[str, str] = {}
@@ -136,6 +161,9 @@ def find_duplicates(items: list[Listing], tz: ZoneInfo, source_order: list[str])
     """Returns {duplicate_id: canonical_id}. Canonical listings are not keys."""
     prepare(items, tz)
     rank = {name: i for i, name in enumerate(source_order)}
+
+    slots = collapse_timed_entry(items)
+    items = [it for it in items if it.id not in slots]
 
     def better(x: Listing) -> tuple:
         return (x.all_day, rank.get(x.source, len(rank)), x.start_at, x.id)
@@ -185,6 +213,9 @@ def find_duplicates(items: list[Listing], tz: ZoneInfo, source_order: list[str])
         for m in groups[root]:
             result[m.id] = target_canon
         attached.add(root)
+
+    for slot_id, keep_id in slots.items():
+        result[slot_id] = keep_id
 
     # Never point at something that is itself a duplicate.
     for k in list(result):

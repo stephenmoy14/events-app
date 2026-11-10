@@ -43,7 +43,8 @@ _RULES: list[tuple[str, str]] = [
               r"|\bdj\b|country|folk|\bpop\b|metal|punk|indie|electronic|\bedm\b|latin|reggae|soul|gospel"),
     ("theater", r"theat|musical|broadway|\bplays?\b|drama|circus|magic|illusion|cabaret|burlesque|spectacular"),
     ("learning", r"lecture|workshop|class|course|seminar|\btalks?\b|computer|technolog|\besl\b|\bell\b|language"
-                 r"|homework|career|\bjobs?\b|financ|citizenship|book club|\bdiy\b|maker|stem|science|educat|learn"),
+                 r"|homework|career|\bjobs?\b|financ|citizenship|book club|\bdiy\b|maker|stem|science|educat|learn"
+                 r"|history|genealog|business|\blaw\b|money"),
     ("arts", r"\barts?\b|fine art|museum|exhibit|gallery|galleries|dance|ballet|film|movie|cinema|photograph"
              r"|literar|poetry|\bbooks?\b|author|reading|craft"),
     ("sports", r"sport|basketball|football|baseball|hockey|soccer|\bnba\b|\bnfl\b|\bmlb\b|\bnhl\b|\bmls\b|wrestl"
@@ -52,7 +53,7 @@ _RULES: list[tuple[str, str]] = [
     ("food", r"\bfood|drink|dining|restaurant|beer|wine|cocktail|brunch|tasting|culinary|cooking"),
     ("nightlife", r"nightlife|party|parties|\bclub|\bbars?\b|karaoke|trivia|drag"),
     ("community", r"festival|\bfest\b|market|\bfair\b|parade|holiday|community|civic|volunteer|cultur|heritage"
-                  r"|celebrat"),
+                  r"|celebrat|outreach|meeting"),
 ]
 _COMPILED = [(group, re.compile(pattern, re.I)) for group, pattern in _RULES]
 
@@ -65,13 +66,20 @@ _TITLE_RULES = [
     ("community", re.compile(r"\bmarket\b|festival|parade|\bfair\b", re.I)),
     ("food", re.compile(r"tasting|brunch|food truck|beer fest|wine", re.I)),
     ("nightlife", re.compile(r"trivia|karaoke|\bdrag\b", re.I)),
+    ("outdoors", re.compile(r"cruise|walking tour|boat tour|\bhike\b|bird walk", re.I)),
+    ("learning", re.compile(r"workshop|\bclass\b|lecture|seminar", re.I)),
+    ("arts", re.compile(r"museum|exhibit|gallery", re.I)),
 ]
+
+# Labels that mean "no label" (Ticketmaster uses these for unclassified events).
+_EMPTY_LABELS = {"undefined", "miscellaneous", "other", "n/a"}
 
 
 def category_group(raw: str | None, title: str | None = None) -> str:
     """Map a source's category label (or, failing that, the title) to a fixed group."""
     if raw:
-        for part in reversed([p.strip() for p in raw.split("/") if p.strip()]):
+        parts = [p.strip() for p in raw.split("/") if p.strip().lower() not in _EMPTY_LABELS and p.strip()]
+        for part in reversed(parts):
             for group, rx in _COMPILED:
                 if rx.search(part):
                     return group

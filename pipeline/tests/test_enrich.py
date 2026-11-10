@@ -20,8 +20,19 @@ def test_title_used_only_when_no_label():
     assert category_group(None, "Chicago Bulls vs. Denver Nuggets") == "sports"
     assert category_group("", "Handmade Market") == "community"
     assert category_group(None, "Elf in Concert") == "music"
-    assert category_group(None, "NoMI Gallery | Everything is Bright") == "other"
+    assert category_group(None, "NoMI Gallery | Everything is Bright") == "arts"
+    assert category_group(None, "Some Unknown Act") == "other"
     assert category_group("Lectures", "Jazz history") == "learning"   # label beats title
+
+
+def test_cases_from_real_data():
+    assert category_group("Miscellaneous / Family", "Balloon Museum | EmotionAir") == "family"
+    assert category_group("Miscellaneous", "Chicago Architecture Center River Cruise Aboard First Lady") == "outdoors"
+    assert category_group("Undefined", "Some Unknown Act") == "other"
+    assert category_group("Chicago 250", "Chicago's Electric Blues Heritage and History: Diddley Bow Workshop") == "learning"
+    assert category_group("History and Genealogy", "Discover Traquero History") == "learning"
+    assert category_group("Outreach", "CityKey ID Card Printing Event") == "community"
+    assert category_group("Story Time", "Baby and Toddler Story Time") == "family"
 
 
 SQUARE = {"type": "FeatureCollection", "features": [

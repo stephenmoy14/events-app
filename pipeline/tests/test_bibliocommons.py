@@ -37,3 +37,14 @@ def test_cancelled_and_virtual_skipped_by_default():
 def test_virtual_kept_when_enabled():
     titles = by_title(fetcher(include_online=True).parse_page(DATA))
     assert titles["Homework Help: Virtual Teacher in the Library"].venue_name == "Online"
+
+
+def test_library_closures_are_not_events():
+    data = json.loads(json.dumps(DATA))
+    data["entities"]["eventTypes"]["closure"] = {"id": "closure", "name": "Library Closures"}
+    data["entities"]["events"]["closed1"] = {"id": "closed1", "definition": {
+        "start": "2026-11-26T00:00", "title": "All CPL Locations Closed Thursday, November 26",
+        "branchLocationId": "18", "typeIds": ["closure"], "isCancelled": False},
+        "indexStart": "2026-11-26T06:00:00Z"}
+    titles = by_title(fetcher().parse_page(data))
+    assert "All CPL Locations Closed Thursday, November 26" not in titles

@@ -111,3 +111,20 @@ def test_generic_venue_names_still_compare():
         L("x", "choose_chicago", "Wild Kratts LIVE! 2.0", at(14, 11), venue="Auditorium Theatre"),
     )
     assert result == {"cc": "tm"}
+
+
+def test_timed_entry_slots_collapse_to_earliest_per_day():
+    venue = dict(venue="Balloon Museum", lat=41.89, lon=-87.62)
+    items = [L(f"d1-{h}{m}", "ticketmaster", "Balloon Museum | EmotionAir - Art You Can Feel - Chicago", at(14, h, m), **venue)
+             for h in range(10, 18) for m in (0, 30)]
+    items += [L(f"d2-{h}", "ticketmaster", "Balloon Museum | EmotionAir - Art You Can Feel - Chicago", at(15, h), **venue)
+              for h in range(10, 14)]
+    result = dupes(*items)
+    assert "d1-100" not in result and "d2-10" not in result          # earliest each day stays
+    assert set(result.values()) == {"d1-100", "d2-10"}
+    assert len(result) == len(items) - 2
+
+
+def test_three_showtimes_are_not_timed_entry():
+    items = [L(f"s{h}", "ticketmaster", "Wild Kratts LIVE! 2.0", at(14, h), venue="Chicago Theatre") for h in (11, 14, 17)]
+    assert dupes(*items) == {}
