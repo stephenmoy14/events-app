@@ -50,9 +50,15 @@ Rule: one source working end to end before adding more. Each phase ends with som
 - [ ] Spot-check `select category, category_group, count(*) ... group by 1, 2` and tune rules
 - [ ] Later: manual merge/split overrides for the odd wrong match
 
-## Phase 6 — Frontend
-- [ ] `npx create-next-app@latest web --ts` (replace placeholder)
-- [ ] 30-day day-by-day list; filters: date, category, free, neighborhood; link to source
+## Phase 6 — Website
+- [x] Next.js app in `web/` reading `upcoming_events` server-side (anon key, cached 15 min)
+- [x] Day-by-day list drawn as an 'L' line; today marked with the flag star
+- [x] Filters in the URL: when (today / weekend / 7 / 30 days), categories, free, neighborhood, search
+- [x] Works without JavaScript; mobile-first; sample data when Supabase isn't configured
+- [x] CI: typecheck, build and screenshots on every push (`.github/workflows/web.yml`)
+- [ ] Run `db/migrations/0006_web.sql` in Supabase (neighborhood list)
+- [ ] Deploy on Vercel: Root Directory `web`, env `SUPABASE_URL` + `SUPABASE_ANON_KEY`
+- [ ] Check it on your phone with real data; note what's annoying
 
 ## Phase 7 — Showcase
 - [ ] Write-up + architecture diagram on the personal website
