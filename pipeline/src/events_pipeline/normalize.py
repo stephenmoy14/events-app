@@ -8,8 +8,8 @@ from datetime import timezone
 
 from .models import Event
 
-_HASH_FIELDS = ("title", "start_at", "end_at", "venue_name", "address",
-                "price_min", "price_max", "is_free", "category", "url", "image_url")
+_HASH_FIELDS = ("title", "start_at", "end_at", "venue_name", "address", "neighborhood",
+                "price_min", "price_max", "is_free", "category", "category_group", "url", "image_url")
 
 
 def to_utc(event: Event) -> Event:

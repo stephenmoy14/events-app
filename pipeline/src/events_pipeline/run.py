@@ -15,6 +15,7 @@ import sys
 from datetime import datetime, timezone
 
 from .config import load_city
+from .enrich import Neighborhoods, enrich
 from .health import ALERT_AFTER_FAILURES, is_due, summary_table
 from .normalize import to_utc
 from .sources import REGISTRY
@@ -42,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         conn.commit()
 
     now = datetime.now(timezone.utc)
+    areas = Neighborhoods.from_config(city)
     report: list[dict] = []
     alerting: list[str] = []
 
@@ -68,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{name}] running…", flush=True)
         try:
             fetcher = REGISTRY[kind](city, cfg, source_name=name)
-            events = [to_utc(e) for e in fetcher.fetch()]
+            events = enrich([to_utc(e) for e in fetcher.fetch()], areas)
             if conn:
                 new, updated = db.upsert_events(conn, src_id, events)
                 db.finish_run(conn, run_id, status="ok", found=len(events), new=new, updated=updated)
@@ -81,7 +83,8 @@ def main(argv: list[str] | None = None) -> int:
                 report.append({"source": name, "status": "dry-run", "found": len(events)})
                 print(f"[{name}] found={len(events)} (dry run)")
                 for e in sorted(events, key=lambda e: e.start_at)[:15]:
-                    print(f"  {e.start_at:%a %b %d %H:%M}Z  {e.title}  @ {e.venue_name}")
+                    print(f"  {e.start_at:%a %b %d %H:%M}Z  {e.title}  @ {e.venue_name}"
+                          f"  [{e.category_group}{', ' + e.neighborhood if e.neighborhood else ''}]")
         except Exception as exc:  # one broken source shouldn't stop the others
             msg = f"{type(exc).__name__}: {exc}"
             print(f"[{name}] ERROR: {msg}", file=sys.stderr)
@@ -94,6 +97,18 @@ def main(argv: list[str] | None = None) -> int:
                 if failures >= ALERT_AFTER_FAILURES:
                     alerting.append(name)
             report.append({"source": name, "status": "error", "failures": failures, "note": msg})
+
+    if conn:
+        # Re-match duplicates across all sources after every run (takes a few seconds).
+        try:
+            from . import dedupe
+            hidden = dedupe.run(conn, city)
+            conn.commit()
+            report.append({"source": "(dedupe)", "status": "ok", "note": f"{hidden} duplicates hidden"})
+        except Exception as exc:
+            conn.rollback()
+            print(f"[dedupe] ERROR: {type(exc).__name__}: {exc}", file=sys.stderr)
+            report.append({"source": "(dedupe)", "status": "error", "note": f"{type(exc).__name__}: {exc}"})
 
     table = summary_table(report)
     print("\n" + table)

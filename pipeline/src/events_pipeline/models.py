@@ -22,7 +22,8 @@ class Event(BaseModel):
     price_min: Decimal | None = None
     price_max: Decimal | None = None
     is_free: bool | None = None
-    category: str | None = None
+    category: str | None = None           # the source's own label
+    category_group: str | None = None     # fixed list, see enrich.CATEGORY_GROUPS
     url: HttpUrl
     image_url: HttpUrl | None = None
 

@@ -9,16 +9,17 @@ from .normalize import content_hash
 
 UPSERT_SQL = """
 insert into events (source_id, source_event_id, title, start_at, end_at, venue_name, address,
-    neighborhood, lat, lon, price_min, price_max, is_free, category, url, image_url, content_hash)
+    neighborhood, lat, lon, price_min, price_max, is_free, category, category_group, url, image_url,
+    content_hash)
 values (%(source_id)s, %(source_event_id)s, %(title)s, %(start_at)s, %(end_at)s, %(venue_name)s,
     %(address)s, %(neighborhood)s, %(lat)s, %(lon)s, %(price_min)s, %(price_max)s, %(is_free)s,
-    %(category)s, %(url)s, %(image_url)s, %(content_hash)s)
+    %(category)s, %(category_group)s, %(url)s, %(image_url)s, %(content_hash)s)
 on conflict (source_id, source_event_id) do update set
     title = excluded.title, start_at = excluded.start_at, end_at = excluded.end_at,
     venue_name = excluded.venue_name, address = excluded.address,
     neighborhood = excluded.neighborhood, lat = excluded.lat, lon = excluded.lon,
     price_min = excluded.price_min, price_max = excluded.price_max, is_free = excluded.is_free,
-    category = excluded.category, url = excluded.url, image_url = excluded.image_url,
+    category = excluded.category, category_group = excluded.category_group, url = excluded.url, image_url = excluded.image_url,
     content_hash = excluded.content_hash, last_seen_at = now(), missed_runs = 0
 """
 

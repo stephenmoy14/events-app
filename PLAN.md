@@ -5,7 +5,7 @@ Rule: one source working end to end before adding more. Each phase ends with som
 
 ## Phase 0 — Setup ✅ scaffolded
 - [x] Folder structure, Event model, schema, Ticketmaster fetcher, CI skeleton
-- [ ] `git init`, push to GitHub (see Phase 4)
+- [x] `git init`, push to GitHub
 - [x] Create Supabase project, run `db/migrations/0001_init.sql` (+ RLS, `0002`)
 - [x] Copy `.env.example` → `.env`, add keys
 
@@ -35,14 +35,20 @@ Rule: one source working end to end before adding more. Each phase ends with som
 - [x] Retries for timeouts, 429 and 5xx with backoff (`sources/base.py`)
 - [x] `scrape_runs` row every run; stuck "running" rows closed out; `source_health` view (`0004`)
 - [x] Run summary table on each Actions run; the run fails (and GitHub emails you) after 3 failures in a row
-- [ ] Run `db/migrations/0004_source_health.sql` in Supabase
-- [ ] Put the repo on GitHub, add secrets, run it once by hand from the Actions tab
+- [x] Run `db/migrations/0004_source_health.sql` in Supabase
+- [x] Put the repo on GitHub, add secrets, run it once by hand from the Actions tab (Session pooler URL for `DATABASE_URL`)
 
-## Phase 5 — Dedupe and expiry
-- [ ] Match on normalized title + venue + date (`dedupe.py`)
-- [ ] Hide ended events and events missing for 2 runs (`upcoming_events` view)
-- [ ] Map each source's categories onto one fixed list (music, comedy, arts, food, outdoors, sports, family, learning, nightlife, other) — the website filters and the Phase 8 chatbot both depend on it
-- [ ] Fill `neighborhood` from lat/lon using Chicago's community area boundaries (City Data Portal)
+## Phase 5 — Dedupe, categories, neighborhoods
+- [x] Cross-source matching: title + start time (±30 min) + venue; showtimes stay separate; all-day listings attach to the earliest showtime (`dedupe.py`)
+- [x] Best listing stays visible (timed over all-day, then source order in config); runs after every scrape
+- [x] Ended events and events missing for 2 runs hidden (`upcoming_events` view)
+- [x] Fixed category groups: music, comedy, theater, arts, food, nightlife, sports, outdoors, family, learning, community, other (`enrich.py`)
+- [x] `neighborhood` from lat/lon using the city's 77 community areas
+- [ ] Run `db/migrations/0005_categories_dedupe.sql` in Supabase
+- [ ] `python -m events_pipeline.dedupe` to preview groups, then a `--force` run to backfill
+- [ ] Commit `config/cities/chicago_community_areas.geojson` (downloaded on first run)
+- [ ] Spot-check `select category, category_group, count(*) ... group by 1, 2` and tune rules
+- [ ] Later: manual merge/split overrides for the odd wrong match
 
 ## Phase 6 — Frontend
 - [ ] `npx create-next-app@latest web --ts` (replace placeholder)

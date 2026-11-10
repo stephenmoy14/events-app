@@ -9,6 +9,16 @@ window_days: 35          # fetch window; the app shows 30
 state_code: IL
 country_code: US
 
+# Neighborhood lookup from event coordinates. Downloaded automatically the first time if
+# missing; commit the file so runs don't re-download it.
+neighborhoods:
+  file: config/cities/chicago_community_areas.geojson
+  url: https://data.cityofchicago.org/resource/igwz-8jzy.geojson?$limit=100
+  name_property: community
+
+# Source order also decides which listing stays visible when the same event comes from
+# several sources (earlier wins).
+
 sources:
   ticketmaster:
     enabled: true

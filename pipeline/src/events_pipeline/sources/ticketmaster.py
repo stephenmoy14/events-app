@@ -86,7 +86,10 @@ class TicketmasterFetcher(Fetcher):
             lon=float(loc["longitude"]) if loc.get("longitude") else None,
             price_min=min((p["min"] for p in prices if "min" in p), default=None),
             price_max=max((p["max"] for p in prices if "max" in p), default=None),
-            category=(cls.get("segment") or {}).get("name"),
+            category=" / ".join(filter(None, [
+                (cls.get("segment") or {}).get("name"),
+                g if (g := (cls.get("genre") or {}).get("name")) not in (None, "Undefined") else None,
+            ])) or None,
             url=raw["url"],
             image_url=images[0]["url"] if images else None,
         )
