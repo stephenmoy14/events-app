@@ -128,6 +128,7 @@ a { color: inherit; }
 .filters {
   margin: 20px 0 8px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);   /* never wider than the sidebar */
   gap: 18px;
 }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -175,6 +176,8 @@ legend {
 }
 
 .pill { position: relative; flex: none; }
+/* Chosen categories move to the front so they stay in view in the scrolling row. */
+.cats .pill:has(input:checked) { order: -1; }
 .pill input {
   position: absolute;
   opacity: 0;
@@ -262,6 +265,16 @@ legend {
   background: linear-gradient(var(--paper) 80%, rgba(245, 248, 250, 0));
   line-height: 1.1;
 }
+.stop h2::before {               /* keep the line running behind the sticky heading */
+  content: "";
+  position: absolute;
+  left: calc(var(--rail) - 3px);
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--line);
+}
+.stop:first-of-type h2::before { top: 22px; }
 .stop .marker {
   position: absolute;
   left: calc(var(--rail) - 11px);
