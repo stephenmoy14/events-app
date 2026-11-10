@@ -544,7 +544,8 @@ legend {
   .more-filters[open] > fieldset:first-of-type { margin-top: 0; }
 }
 
-.pills.wrap { flex-wrap: wrap; overflow: visible; }
+.pills.wrap,
+.when .pills { flex-wrap: wrap; overflow: visible; }
 .pill small { font-size: 12px; color: var(--muted); font-weight: 500; }
 .pill input:checked + span small { color: #cfe3ee; }
 
