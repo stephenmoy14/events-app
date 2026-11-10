@@ -1,0 +1,38 @@
+name: Website
+
+on:
+  push:
+    paths: ["web/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["web/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run build
+      # Screenshots use the built-in sample data (no Supabase secrets in CI).
+      - name: Screenshots
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1
+          npx playwright install --with-deps chromium
+          (npm run start -- -p 3000 > /tmp/server.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:3000 >/dev/null && break; sleep 1; done
+          node scripts/screenshot.mjs shots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: web/shots/
+      - name: Print screenshots (base64) for remote review
+        run: |
+          for f in shots/*.jpg; do echo "=====BEGIN $f"; base64 -w 100 "$f"; echo "=====END $f"; done

@@ -1,10 +1,18 @@
-# web (phase 6)
+# web
 
-Placeholder. When the pipeline is filling the database, generate the app here:
+The site: what's on in Chicago over the next 30 days, read from the `upcoming_events`
+view in Supabase (already filtered to not-ended, not-cancelled, not-duplicate).
 
 ```bash
-npx create-next-app@latest web --ts --eslint --app --src-dir
+cd web
+npm install
+cp .env.example .env.local   # fill in SUPABASE_URL and SUPABASE_ANON_KEY
+npm run dev                  # http://localhost:3000
 ```
 
-It reads only the `upcoming_events` view (already filtered to not-ended, not-cancelled,
-not-duplicate, next 30 days). Show times in America/Chicago and always link back to the source.
+Without the two variables it shows a small built-in sample so the layout can be worked on.
+
+Filters live in the URL (`?when=weekend&cat=music&cat=comedy&free=1&hood=Pilsen&q=jazz`),
+so every view can be bookmarked or shared, and the filter form works without JavaScript.
+
+Deploy: Vercel → import the GitHub repo → Root Directory `web` → add the two variables.
