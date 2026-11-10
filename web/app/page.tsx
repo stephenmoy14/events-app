@@ -1,6 +1,6 @@
 import { category, SOURCE_NAMES } from "@/lib/categories";
 import { chicagoDate, dayHeading, formatTime, isAllDay, WHEN_OPTIONS } from "@/lib/dates";
-import { type EventRow, type Filters, getEvents, getNeighborhoods, PAGE_SIZE, parseFilters } from "@/lib/events";
+import { type EventRow, type Filters, getEvents, getNeighborhoods, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
 import { FilterForm } from "./filters";
 import { Star } from "./star";
 
@@ -10,7 +10,13 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 export default async function Page({ searchParams }: Props) {
   const filters = parseFilters(await searchParams);
-  const [listing, neighborhoods] = await Promise.all([getEvents(filters), getNeighborhoods()]);
+  let listing: Awaited<ReturnType<typeof getEvents>>;
+  let neighborhoods: string[];
+  try {
+    [listing, neighborhoods] = await Promise.all([getEvents(filters), getNeighborhoods()]);
+  } catch (err) {
+    return <LoadFailed err={err} />;
+  }
   const days = groupByDay(listing.events, listing.from);
   const whenLabel = WHEN_OPTIONS.find((w) => w.key === filters.when)!.label.toLowerCase();
 
@@ -155,4 +161,19 @@ function priceText(e: EventRow): string | null {
   if (lo == null && hi == null) return null;
   if (lo != null && hi != null && hi > lo) return `${fmt(lo)}–${fmt(hi)}`;
   return fmt((lo ?? hi)!);
+}
+
+function LoadFailed({ err }: { err: unknown }) {
+  const known = err instanceof LoadError;
+  return (
+    <div className="shell">
+      <main className="line">
+        <div className="empty">
+          <h2>Events didn’t load</h2>
+          <p>{known ? err.message : "The event database didn’t answer."}</p>
+          <p>{known ? err.hint : "This usually clears up within a minute. Reload the page to try again."}</p>
+        </div>
+      </main>
+    </div>
+  );
 }

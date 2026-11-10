@@ -27,6 +27,25 @@ export type Filters = {
 };
 
 export const PAGE_SIZE = 150;
+
+/** A failed Supabase request, with a plain-language hint about the likely fix. */
+export class LoadError extends Error {
+  constructor(public status: number, body: string) {
+    let detail = body;
+    try {
+      const j = JSON.parse(body);
+      detail = [j.message, j.hint, j.details].filter(Boolean).join(" ");
+    } catch {}
+    super(`Supabase answered ${status}: ${detail.slice(0, 300)}`);
+  }
+  get hint(): string {
+    if (this.status === 401 || this.status === 403)
+      return "Check SUPABASE_ANON_KEY in the Vercel project settings (use the publishable/anon key), then redeploy.";
+    if (this.status === 404)
+      return "The upcoming_events view wasn't found. Check SUPABASE_URL and that the migrations ran.";
+    return "Check the Vercel environment variables and the Supabase migrations.";
+  }
+}
 const COLUMNS =
   "id,title,start_at,end_at,venue_name,neighborhood,price_min,price_max,is_free,category_group,url,source_name";
 
@@ -91,7 +110,7 @@ export async function getEvents(f: Filters, now = new Date()): Promise<Listing> 
     next: { revalidate: 900 },
   });
   if (!res.ok) {
-    throw new Error(`Supabase returned ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    throw new LoadError(res.status, await res.text());
   }
   const events = (await res.json()) as EventRow[];
   const total = Number(res.headers.get("content-range")?.split("/")[1] ?? events.length);
