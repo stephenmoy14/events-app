@@ -15,6 +15,7 @@ from ..models import Event
 from .base import Fetcher
 
 PAGE_SIZE = 50   # the plugin's default maximum
+_STATE_NAMES = {"IL": "ILLINOIS"}
 
 
 def _utc(value: str | None) -> datetime | None:
@@ -64,6 +65,10 @@ class TribeEventsFetcher(Fetcher):
         if start_at is None or not raw.get("url"):
             return None
         venue = raw.get("venue") if isinstance(raw.get("venue"), dict) else {}
+        state = (venue.get("stateprovince") or venue.get("state") or venue.get("province") or "").strip().upper()
+        wanted = (self.city.get("state_code") or "").upper()
+        if state and wanted and state not in (wanted, _STATE_NAMES.get(wanted, "")):
+            return None                      # e.g. a Cincinnati game listed on a Chicago site
         price_min, price_max = _prices(raw)
         cost = (raw.get("cost") or "").strip().lower()
         is_free = True if cost == "free" or (price_max is not None and price_max == 0) else (

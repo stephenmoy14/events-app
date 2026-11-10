@@ -109,7 +109,7 @@ export async function getEvents(f: Filters, now = new Date()): Promise<Listing> 
 
   const res = await fetch(`${cfg.url}/rest/v1/upcoming_events?${qs}`, {
     headers: { apikey: cfg.key, Prefer: "count=exact" },
-    next: { revalidate: 900 },
+    next: { revalidate: 300 },
   });
   if (!res.ok) {
     throw new LoadError(res.status, await res.text());
@@ -124,7 +124,7 @@ export async function getNeighborhoods(): Promise<string[]> {
   if (!cfg) return SAMPLE_NEIGHBORHOODS;
   const res = await fetch(`${cfg.url}/rest/v1/upcoming_neighborhoods?select=neighborhood&order=neighborhood.asc`, {
     headers: { apikey: cfg.key },
-    next: { revalidate: 3600 },
+    next: { revalidate: 900 },
   });
   if (!res.ok) return []; // the filter just won't offer neighborhoods
   return ((await res.json()) as { neighborhood: string }[]).map((r) => r.neighborhood);

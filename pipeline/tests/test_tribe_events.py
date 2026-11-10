@@ -43,3 +43,11 @@ def test_times_are_utc_and_ids_unique_per_occurrence():
 def test_missing_venue_and_image_ok():
     ev = by_title(parsed())["Venue TBA Show"]
     assert ev.venue_name is None and ev.image_url is None and ev.end_at is None
+
+
+def test_other_state_skipped():
+    f = TribeEventsFetcher({**CITY, "state_code": "IL"}, {"base_url": "https://x"}, source_name="choose_chicago")
+    raw = dict(DATA["events"][0], venue={"venue": "Cintas Center", "city": "Cincinnati", "stateprovince": "OH"})
+    assert f.parse(raw) is None
+    raw_il = dict(DATA["events"][0], venue={"venue": "NoMI", "city": "Chicago", "stateprovince": "IL"})
+    assert f.parse(raw_il) is not None

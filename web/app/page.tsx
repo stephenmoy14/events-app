@@ -4,7 +4,7 @@ import { type EventRow, type Filters, getEvents, getNeighborhoods, LoadError, PA
 import { FilterForm } from "./filters";
 import { Star } from "./star";
 
-export const revalidate = 900;
+export const revalidate = 300;
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 

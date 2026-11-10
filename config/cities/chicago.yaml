@@ -9,6 +9,11 @@ window_days: 35          # fetch window; the app shows 30
 state_code: IL
 country_code: US
 
+# Events with coordinates farther than this from downtown are dropped (catches out-of-town
+# listings that sources tag as Chicago). Covers the suburbs.
+center: [41.8781, -87.6298]
+radius_km: 60
+
 # Neighborhood lookup from event coordinates. Downloaded automatically the first time if
 # missing; commit the file so runs don't re-download it.
 neighborhoods:

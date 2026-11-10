@@ -58,3 +58,15 @@ def test_enrich_sets_both_fields():
                category="Music / Jazz", lat=41.923, lon=-87.703, url="https://example.com/1")
     [out] = enrich([ev], Neighborhoods(SQUARE, "community"))
     assert out.category_group == "music" and out.neighborhood == "Logan Square"
+
+
+def test_out_of_area_and_zero_price():
+    from events_pipeline.enrich import in_area
+    city = {"center": [41.8781, -87.6298], "radius_km": 60}
+    base = dict(source="x", source_event_id="1", title="Game", start_at=datetime(2026, 11, 20, 2, tzinfo=timezone.utc),
+                url="https://example.com/1")
+    assert not in_area(Event(**base, lat=39.149, lon=-84.475), city)     # Cincinnati
+    assert in_area(Event(**base, lat=42.045, lon=-87.688), city)         # Evanston
+    assert in_area(Event(**base), city)                                  # no coordinates: keep
+    [out] = enrich([Event(**base, price_min=0, price_max=0)], None)
+    assert out.is_free is True

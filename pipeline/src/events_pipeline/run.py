@@ -15,7 +15,7 @@ import sys
 from datetime import datetime, timezone
 
 from .config import load_city
-from .enrich import Neighborhoods, enrich
+from .enrich import Neighborhoods, enrich, in_area
 from .health import ALERT_AFTER_FAILURES, is_due, summary_table
 from .normalize import to_utc
 from .sources import REGISTRY
@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{name}] running…", flush=True)
         try:
             fetcher = REGISTRY[kind](city, cfg, source_name=name)
-            events = enrich([to_utc(e) for e in fetcher.fetch()], areas)
+            events = enrich([to_utc(e) for e in fetcher.fetch() if in_area(e, city)], areas)
             if conn:
                 new, updated = db.upsert_events(conn, src_id, events)
                 db.finish_run(conn, run_id, status="ok", found=len(events), new=new, updated=updated)

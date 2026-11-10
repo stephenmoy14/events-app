@@ -161,10 +161,28 @@ class Neighborhoods:
         return cls(json.loads(Path(path).read_text(encoding="utf-8")), cfg.get("name_property", "name"))
 
 
+def km_between(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    import math
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    h = (math.sin((p2 - p1) / 2) ** 2
+         + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2)
+    return 2 * 6371.0 * math.asin(math.sqrt(h))
+
+
+def in_area(ev: Event, city: dict) -> bool:
+    """False for events whose coordinates put them clearly outside the city's area."""
+    center, radius = city.get("center"), city.get("radius_km")
+    if not center or not radius or ev.lat is None or ev.lon is None:
+        return True
+    return km_between(ev.lat, ev.lon, center[0], center[1]) <= radius
+
+
 def enrich(events: list[Event], areas: Neighborhoods | None) -> list[Event]:
     out = []
     for ev in events:
         update = {"category_group": category_group(ev.category, ev.title)}
+        if ev.is_free is None and ev.price_max is not None and ev.price_max == 0:
+            update["is_free"] = True         # "$0" tickets are free RSVPs
         if areas and not ev.neighborhood:
             update["neighborhood"] = areas.lookup(ev.lat, ev.lon)
         out.append(ev.model_copy(update=update))
