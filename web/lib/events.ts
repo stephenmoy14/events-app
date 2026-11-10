@@ -78,8 +78,10 @@ export type Listing = {
 };
 
 function config() {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
-  const key = process.env.SUPABASE_ANON_KEY;
+  // Tolerate copy-paste extras: spaces, newlines, surrounding quotes, a trailing slash.
+  const clean = (v: string | undefined) => v?.trim().replace(/^["']|["']$/g, "").trim();
+  const url = clean(process.env.SUPABASE_URL)?.replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+  const key = clean(process.env.SUPABASE_ANON_KEY);
   return url && key ? { url, key } : null;
 }
 
