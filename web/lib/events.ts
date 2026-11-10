@@ -109,7 +109,8 @@ export async function getEvents(f: Filters, now = new Date()): Promise<Listing> 
 
   const res = await fetch(`${cfg.url}/rest/v1/upcoming_events?${qs}`, {
     headers: { apikey: cfg.key, Prefer: "count=exact" },
-    next: { revalidate: 300 },
+    // Always fresh: one quick query per page view, and a bad moment can't get stuck in a cache.
+    cache: "no-store",
   });
   if (!res.ok) {
     throw new LoadError(res.status, await res.text());
