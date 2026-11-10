@@ -214,8 +214,8 @@ legend {
 }
 
 .pair { display: flex; flex-wrap: wrap; gap: 18px 24px; align-items: flex-start; }
-.where { display: grid; }
-.where .legend {             /* a <label>, styled like the fieldset legends */
+.hood-field { display: grid; }
+.hood-field .legend {             /* a <label>, styled like the fieldset legends */
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 700;
@@ -490,7 +490,8 @@ legend {
 .calendar[open] > summary::after { content: "▴"; }
 @media (min-width: 960px) {
   .calendar > summary { border: 0; padding: 0; background: none; font-size: 14px; font-weight: 700; font-stretch: 112%; cursor: default; pointer-events: none; }
-  .calendar > summary::after { content: none; }
+  .calendar > summary::after,
+  .calendar[open] > summary::after { content: none; }
 }
 
 .month { border-collapse: collapse; margin-top: 12px; width: 100%; max-width: 340px; table-layout: fixed; }

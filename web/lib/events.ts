@@ -149,12 +149,14 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
     }),
   ]);
   if (!eventsRes.ok) throw new LoadError(eventsRes.status, await eventsRes.text());
-  if (!countsRes.ok) throw new LoadError(countsRes.status, await countsRes.text());
+  // Counts are a nice-to-have: without them (e.g. before migration 0008) the page still works.
+  const countRows = countsRes.ok ? ((await countsRes.json()) as { day: string; events: number }[]) : [];
+  if (!countsRes.ok) console.error("event_day_counts failed", countsRes.status, (await countsRes.text()).slice(0, 200));
 
   const events = (await eventsRes.json()) as EventRow[];
   const total = Number(eventsRes.headers.get("content-range")?.split("/")[1] ?? events.length);
   const counts: Record<string, number> = {};
-  for (const r of (await countsRes.json()) as { day: string; events: number }[]) counts[r.day] = Number(r.events);
+  for (const r of countRows) counts[r.day] = Number(r.events);
   return { today, days, day, counts, events, total: Number.isFinite(total) ? total : events.length, sample: false };
 }
 

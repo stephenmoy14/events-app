@@ -11,6 +11,7 @@ export function Calendar({ f, today, day, days, counts }: {
 }) {
   const last = addDays(today, WINDOW_DAYS - 1);
   const max = Math.max(1, ...Object.values(counts));
+  const hasCounts = Object.keys(counts).length > 0; // false before migration 0008
   const months: string[] = [];
   for (let m = today.slice(0, 7); m <= last.slice(0, 7); m = nextMonth(m)) months.push(m);
 
@@ -39,7 +40,7 @@ export function Calendar({ f, today, day, days, counts }: {
                   const cls = [d === day ? "sel" : "", d === today ? "today" : ""].filter(Boolean).join(" ");
                   return (
                     <td key={di} className={cls || undefined}>
-                      {inWindow && n > 0 ? (
+                      {inWindow && (n > 0 || !hasCounts) ? (
                         <a
                           href={hrefWith(f, { day: d, when: days.includes(d) ? f.when : "month", limit: PAGE_SIZE })}
                           aria-label={label}

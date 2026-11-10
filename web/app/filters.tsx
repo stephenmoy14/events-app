@@ -53,7 +53,7 @@ export function FilterForm({ filters, day, neighborhoods }: { filters: Filters; 
         </fieldset>
 
         {neighborhoods.length > 0 && (
-          <div className="where">
+          <div className="hood-field">
             <label htmlFor="hood" className="legend">Where</label>
             <div className="hood">
               <select id="hood" name="hood" defaultValue={filters.neighborhood}>

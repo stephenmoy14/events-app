@@ -44,7 +44,7 @@ export function DayStrip({ f, days, day, today, counts }: {
                 <span className="wk">{d === today ? "Today" : short.format(chicagoMidnight(d))}</span>
                 <span className="node" aria-hidden="true">{d === today ? <Star size={18} /> : null}</span>
                 <span className="num">{dayNum(d)}</span>
-                <span className="n">{n.toLocaleString("en-US")}</span>
+                {Object.keys(counts).length ? <span className="n">{n.toLocaleString("en-US")}</span> : null}
               </a>
             </li>
           );
