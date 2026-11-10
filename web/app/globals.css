@@ -469,10 +469,58 @@ legend {
 }
 .pager a:hover { background: var(--ink); color: #fff; }
 
-/* ---------- calendar ---------- */
+/* ---------- range calendar (Custom) ---------- */
 
-.calendar { margin: 22px 0 0; }
-.calendar > summary {
+.calendar {
+  margin-top: 14px;
+  padding: 14px;
+  border: 2px solid var(--rule);
+  border-radius: 14px;
+  background: var(--surface);
+  max-width: 380px;
+}
+.cal-status { margin: 0 0 4px; font-weight: 600; font-size: 15px; }
+.month { border-collapse: collapse; margin-top: 10px; width: 100%; table-layout: fixed; }
+.month caption { text-align: left; font-weight: 700; font-stretch: 112%; padding-bottom: 6px; }
+.month th { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 4px; }
+.month td { text-align: center; padding: 1px 0; height: 42px; vertical-align: top; }
+.month a,
+.month .dn.out {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 3px;
+  height: 40px;
+  padding-top: 5px;
+  text-decoration: none;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  border-radius: 8px;
+}
+.month a:hover { background: #e4edf3; }
+.month .dn.out { color: #b3bec8; }
+.month td.today .dn { color: var(--star); font-weight: 800; }
+/* the chosen range reads as a band; its ends are solid */
+.month td.in a { background: #dcecf5; border-radius: 0; }
+.month td.start a { border-radius: 8px 0 0 8px; }
+.month td.end a { border-radius: 0 8px 8px 0; }
+.month td.start.end a { border-radius: 8px; }
+.month td.start a,
+.month td.end a { background: var(--ink); color: #fff; }
+.month td.start .dn,
+.month td.end .dn { color: #fff; }
+.month td.start .busy,
+.month td.end .busy { background: #fff; }
+.busy { border-radius: 50%; background: var(--line); }
+.busy.l1 { width: 5px; height: 5px; }
+.busy.l2 { width: 8px; height: 8px; }
+.busy.l3 { width: 11px; height: 11px; background: #1d8fc0; }
+.cal-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+
+/* ---------- more filters ---------- */
+
+.more-filters > summary {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -485,45 +533,24 @@ legend {
   cursor: pointer;
   list-style: none;
 }
-.calendar > summary::-webkit-details-marker { display: none; }
-.calendar > summary::after { content: "▾"; font-size: 12px; }
-.calendar[open] > summary::after { content: "▴"; }
+.more-filters > summary::-webkit-details-marker { display: none; }
+.more-filters > summary::after { content: "▾"; font-size: 12px; }
+.more-filters[open] > summary::after { content: "▴"; }
+.more-filters > fieldset,
+.more-filters > .hood-field { margin-top: 18px; }
 @media (min-width: 960px) {
-  .calendar > summary { border: 0; padding: 0; background: none; font-size: 14px; font-weight: 700; font-stretch: 112%; cursor: default; pointer-events: none; }
-  .calendar > summary::after,
-  .calendar[open] > summary::after { content: none; }
+  /* opened by script on wide screens; the button stays if that never happens */
+  .more-filters[open] > summary { display: none; }
+  .more-filters[open] > fieldset:first-of-type { margin-top: 0; }
 }
 
-.month { border-collapse: collapse; margin-top: 12px; width: 100%; max-width: 340px; table-layout: fixed; }
-.month caption { text-align: left; font-weight: 700; font-stretch: 112%; padding-bottom: 6px; }
-.month th { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 4px; }
-.month td { text-align: center; padding: 1px; height: 42px; vertical-align: top; }
-.month a,
-.month .dn.out,
-.month .dn.empty-day {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 3px;
-  height: 40px;
-  padding-top: 5px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  font-size: 15px;
-}
-.month a:hover { background: #e4edf3; }
-.month .dn.out { color: #b3bec8; }
-.month .dn.empty-day { color: var(--muted); }
-.month td.today .dn { color: var(--star); font-weight: 800; }
-.month td.sel a { background: var(--ink); color: #fff; }
-.month td.sel .busy { background: #fff; }
-.busy { border-radius: 50%; background: var(--line); }
-.busy.l1 { width: 5px; height: 5px; }
-.busy.l2 { width: 8px; height: 8px; }
-.busy.l3 { width: 11px; height: 11px; background: #1d8fc0; }
-.cal-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+.pills.wrap { flex-wrap: wrap; overflow: visible; }
+.pill small { font-size: 12px; color: var(--muted); font-weight: 500; }
+.pill input:checked + span small { color: #cfe3ee; }
+
+.switch { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; cursor: pointer; font-size: 15px; }
+.switch input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; }
+.field-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); max-width: 42ch; }
 
 /* ---------- more, empty, footer ---------- */
 

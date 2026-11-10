@@ -1,4 +1,4 @@
-import { addDays, chicagoDate, chicagoMidnight, rangeFor, type When, WHEN_OPTIONS } from "./dates";
+import { addDays, chicagoDate, chicagoMidnight, isAllDay, PRICE_OPTIONS, type PriceKey, rangeFor, TIME_OPTIONS, type TimeKey, type When, WHEN_OPTIONS, weekday } from "./dates";
 import { isCategory, type CategoryKey } from "./categories";
 import { SAMPLE_EVENTS, SAMPLE_NEIGHBORHOODS } from "./sample";
 
@@ -19,13 +19,20 @@ export type EventRow = {
 
 export type Filters = {
   when: When;
-  day: string | null; // requested day (YYYY-MM-DD); clamped to the range
+  from: string | null;  // custom range (YYYY-MM-DD, inclusive)
+  to: string | null;
+  pick: boolean;        // custom range: start chosen, waiting for the end date
+  day: string | null;   // requested day; clamped to the range
   categories: CategoryKey[];
-  free: boolean;
+  price: PriceKey;
+  times: TimeKey[];
+  weekendAny: boolean;  // time-of-day filter applies Mon–Fri only
   neighborhood: string;
   q: string;
   limit: number;
 };
+
+const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 export const PAGE_SIZE = 150;
 export const WINDOW_DAYS = 31; // calendar covers today + 30
@@ -41,11 +48,17 @@ export function parseFilters(params: Params): Filters {
   const when = first(params.when);
   const day = first(params.day);
   const limit = Number.parseInt(first(params.limit), 10);
+  const price = first(params.price) || (first(params.free) === "1" ? "free" : "any"); // free=1: older links
   return {
     when: (WHEN_OPTIONS.some((w) => w.key === when) ? when : "week") as When,
-    day: /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null,
+    from: isDate(first(params.from)) ? first(params.from) : null,
+    to: isDate(first(params.to)) ? first(params.to) : null,
+    pick: first(params.pick) === "1",
+    day: isDate(day) ? day : null,
     categories: all(params.cat).filter(isCategory),
-    free: first(params.free) === "1",
+    price: (PRICE_OPTIONS.some((p) => p.key === price) ? price : "any") as PriceKey,
+    times: all(params.time).filter((t): t is TimeKey => TIME_OPTIONS.some((o) => o.key === t)),
+    weekendAny: first(params.wkend) === "1",
     neighborhood: first(params.hood).slice(0, 60),
     // PostgREST filter syntax uses , ( ) " * \ — drop them from free text.
     q: first(params.q).replace(/[,()"*\\%]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80),
@@ -58,9 +71,16 @@ export function hrefWith(f: Filters, change: Partial<Filters> = {}, hash = ""): 
   const g = { ...f, ...change };
   const p = new URLSearchParams();
   p.set("when", g.when);
+  if (g.when === "custom") {
+    if (g.from) p.set("from", g.from);
+    if (g.to) p.set("to", g.to);
+    if (g.pick) p.set("pick", "1");
+  }
   if (g.day) p.set("day", g.day);
   g.categories.forEach((c) => p.append("cat", c));
-  if (g.free) p.set("free", "1");
+  if (g.price !== "any") p.set("price", g.price);
+  g.times.forEach((t) => p.append("time", t));
+  if (g.weekendAny) p.set("wkend", "1");
   if (g.neighborhood) p.set("hood", g.neighborhood);
   if (g.q) p.set("q", g.q);
   if (g.limit !== PAGE_SIZE) p.set("limit", String(g.limit));
@@ -106,7 +126,7 @@ export class LoadError extends Error {
 
 export async function getDayView(f: Filters, now = new Date()): Promise<DayView> {
   const today = chicagoDate(now);
-  const [from, to] = rangeFor(f.when, today);
+  const [from, to] = rangeFor(f.when, today, f);
   const days: string[] = [];
   for (let d = from; d < to; d = addDays(d, 1)) days.push(d);
   const day = f.day && days.includes(f.day) ? f.day : days[0];
@@ -123,9 +143,15 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
   qs.set("start_at", `lt.${endIso}`);
   const conditions = [`or(start_at.gte.${startIso},end_at.gte.${startIso})`];
   if (f.q) conditions.push(`or(title.ilike.*${f.q}*,venue_name.ilike.*${f.q}*,neighborhood.ilike.*${f.q}*)`);
+  if (f.price === "free") qs.set("is_free", "is.true");
+  else if (f.price !== "any") conditions.push(`or(is_free.is.true,price_min.lt.${f.price})`);
+  const hours = timeFilterHours(f, day);
+  if (hours) {
+    conditions.push("all_day.is.false");
+    qs.set("start_hour", `in.(${hours.join(",")})`);
+  }
   qs.set("and", `(${conditions.join(",")})`);
   if (f.categories.length) qs.set("category_group", `in.(${f.categories.join(",")})`);
-  if (f.free) qs.set("is_free", "is.true");
   if (f.neighborhood) qs.set("neighborhood", `eq.${f.neighborhood}`);
   qs.set("order", "start_at.asc,title.asc");
   qs.set("limit", String(f.limit));
@@ -142,9 +168,11 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
         p_from: today,
         p_to: addDays(today, WINDOW_DAYS),
         p_cats: f.categories.length ? f.categories : null,
-        p_free: f.free,
+        p_price: f.price,
         p_hood: f.neighborhood || null,
         p_q: f.q || null,
+        p_hours: f.times.length ? allowedHours(f.times) : null,
+        p_weekend_any: f.weekendAny,
       }),
     }),
   ]);
@@ -158,6 +186,18 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
   const counts: Record<string, number> = {};
   for (const r of countRows) counts[r.day] = Number(r.events);
   return { today, days, day, counts, events, total: Number.isFinite(total) ? total : events.length, sample: false };
+}
+
+function allowedHours(times: TimeKey[]): number[] {
+  return TIME_OPTIONS.filter((o) => times.includes(o.key)).flatMap((o) => [...o.hours]);
+}
+
+/** Hours to keep on this day, or null when the time-of-day filter doesn't apply to it. */
+export function timeFilterHours(f: Filters, day: string): number[] | null {
+  if (!f.times.length) return null;
+  const dow = weekday(day);
+  if (f.weekendAny && (dow === 0 || dow === 6)) return null;
+  return allowedHours(f.times);
 }
 
 export async function getNeighborhoods(): Promise<string[]> {
@@ -184,19 +224,25 @@ function sampleView(f: Filters, now: Date, today: string, days: string[], day: s
     };
   })
     .filter((e) => !f.categories.length || f.categories.includes((e.category_group ?? "other") as CategoryKey))
-    .filter((e) => !f.free || e.is_free)
+    .filter((e) => f.price === "any" || !!e.is_free || (f.price !== "free" && e.price_min != null && e.price_min < Number(f.price)))
     .filter((e) => !f.neighborhood || e.neighborhood === f.neighborhood)
     .filter((e) => !q || [e.title, e.venue_name, e.neighborhood].some((v) => v?.toLowerCase().includes(q)))
     .sort((a, b) => a.start_at.localeCompare(b.start_at));
 
-  const overlaps = (e: EventRow, s: string, end: string) => e.start_at < end && (e.end_at ?? e.start_at) >= s;
+  const hourOf = (iso: string) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour: "numeric", hourCycle: "h23" }).format(new Date(iso)));
+  const timeOk = (e: EventRow, d: string) => {
+    const hours = timeFilterHours(f, d);
+    return !hours || (!isAllDay(e.start_at, e.end_at) && hours.includes(hourOf(e.start_at)));
+  };
+  const overlaps = (e: EventRow, s: string, end: string, d: string) =>
+    e.start_at < end && (e.end_at ?? e.start_at) >= s && timeOk(e, d);
   const counts: Record<string, number> = {};
   for (let i = 0; i < WINDOW_DAYS; i++) {
     const d = addDays(today, i);
     const s = d === today ? now.toISOString() : chicagoMidnight(d).toISOString();
-    const n = rows.filter((e) => overlaps(e, s, chicagoMidnight(addDays(d, 1)).toISOString())).length;
+    const n = rows.filter((e) => overlaps(e, s, chicagoMidnight(addDays(d, 1)).toISOString(), d)).length;
     if (n) counts[d] = n;
   }
-  const events = rows.filter((e) => overlaps(e, startIso, endIso));
+  const events = rows.filter((e) => overlaps(e, startIso, endIso, day));
   return { today, days, day, counts, events: events.slice(0, f.limit), total: events.length, sample: true };
 }

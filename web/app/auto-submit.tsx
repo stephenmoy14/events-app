@@ -13,8 +13,7 @@ export function AutoSubmit({ formId }: { formId: string }) {
       if (t.type === "search" || t.type === "text") return; // search waits for Enter
       // A new date range starts at its first day.
       if (t.name === "when") {
-        const day = form.querySelector<HTMLInputElement>('input[name="day"]');
-        if (day) day.disabled = true;
+        form.querySelectorAll<HTMLInputElement>("input[data-range]").forEach((i) => (i.disabled = true));
       }
       form.requestSubmit();
     };

@@ -1,23 +1,40 @@
 import { addDays, chicagoMidnight, TZ } from "@/lib/dates";
 import { type Filters, hrefWith, PAGE_SIZE, WINDOW_DAYS } from "@/lib/events";
-import { OpenOnWide } from "./open-on-wide";
 
 const monthName = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "long", year: "numeric" });
 const longDay = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" });
+const shortDay = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
 
-/** Month grids for today .. today+30; each day shows how busy it is and links to it. */
-export function Calendar({ f, today, day, days, counts }: {
-  f: Filters; today: string; day: string; days: string[]; counts: Record<string, number>;
+/**
+ * Range picker for "Custom": tap a start date, then an end date. Works without JavaScript —
+ * every date is a link that sets the next state of the range. Dots show how busy each day is.
+ */
+export function RangeCalendar({ f, today, range, counts }: {
+  f: Filters; today: string; range: [string, string]; counts: Record<string, number>;
 }) {
   const last = addDays(today, WINDOW_DAYS - 1);
+  const [start, endExcl] = range;
+  const end = addDays(endExcl, -1);
+  const choosingEnd = f.pick && !!f.from;
   const max = Math.max(1, ...Object.values(counts));
-  const hasCounts = Object.keys(counts).length > 0; // false before migration 0008
+  const hasCounts = Object.keys(counts).length > 0;
   const months: string[] = [];
   for (let m = today.slice(0, 7); m <= last.slice(0, 7); m = nextMonth(m)) months.push(m);
 
+  const linkFor = (d: string) =>
+    choosingEnd && d >= start
+      ? hrefWith(f, { from: start, to: d, pick: false, day: null, limit: PAGE_SIZE })
+      : hrefWith(f, { from: d, to: d, pick: true, day: null, limit: PAGE_SIZE });
+
   return (
-    <details className="calendar" id="calendar">
-      <summary>Pick a date</summary>
+    <div className="calendar" aria-label="Choose dates">
+      <p className="cal-status" aria-live="polite">
+        {!f.from
+          ? "Tap a start date."
+          : choosingEnd
+            ? `From ${shortDay.format(chicagoMidnight(start))}. Now tap an end date.`
+            : `${shortDay.format(chicagoMidnight(start))}${end !== start ? ` to ${shortDay.format(chicagoMidnight(end))}` : ""}. Tap a date to start over.`}
+      </p>
       {months.map((m) => (
         <table key={m} className="month">
           <caption>{monthName.format(new Date(`${m}-01T12:00:00Z`))}</caption>
@@ -35,24 +52,27 @@ export function Calendar({ f, today, day, days, counts }: {
                   if (!d) return <td key={di} />;
                   const inWindow = d >= today && d <= last;
                   const n = counts[d] ?? 0;
-                  const label = `${longDay.format(chicagoMidnight(d))}: ${n} ${n === 1 ? "event" : "events"}`;
+                  const picked = !!f.from && d >= start && d <= end;
+                  const cls = [
+                    picked ? "in" : "",
+                    picked && d === start ? "start" : "",
+                    picked && d === end ? "end" : "",
+                    d === today ? "today" : "",
+                  ].filter(Boolean).join(" ");
                   const level = n === 0 ? 0 : n / max > 0.66 ? 3 : n / max > 0.33 ? 2 : 1;
-                  const cls = [d === day ? "sel" : "", d === today ? "today" : ""].filter(Boolean).join(" ");
                   return (
                     <td key={di} className={cls || undefined}>
-                      {inWindow && (n > 0 || !hasCounts) ? (
+                      {inWindow ? (
                         <a
-                          href={hrefWith(f, { day: d, when: days.includes(d) ? f.when : "month", limit: PAGE_SIZE })}
-                          aria-label={label}
-                          aria-current={d === day ? "date" : undefined}
+                          href={linkFor(d)}
+                          aria-label={`${longDay.format(chicagoMidnight(d))}${hasCounts ? `: ${n} ${n === 1 ? "event" : "events"}` : ""}`}
+                          aria-pressed={picked || undefined}
                         >
                           <span className="dn">{Number(d.slice(8))}</span>
                           <span className={`busy l${level}`} aria-hidden="true" />
                         </a>
                       ) : (
-                        <span className={inWindow ? "dn empty-day" : "dn out"} aria-label={inWindow ? label : undefined}>
-                          {Number(d.slice(8))}
-                        </span>
+                        <span className="dn out">{Number(d.slice(8))}</span>
                       )}
                     </td>
                   );
@@ -62,9 +82,8 @@ export function Calendar({ f, today, day, days, counts }: {
           </tbody>
         </table>
       ))}
-      <p className="cal-note">Dots show how busy each day is with your current filters.</p>
-      <OpenOnWide detailsId="calendar" />
-    </details>
+      {hasCounts ? <p className="cal-note">Dots show how busy each day is with your current filters.</p> : null}
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { category, SOURCE_NAMES } from "@/lib/categories";
-import { chicagoDate, chicagoMidnight, formatTime, isAllDay, TZ } from "@/lib/dates";
+import { addDays, chicagoDate, chicagoMidnight, formatTime, isAllDay, TZ } from "@/lib/dates";
 import { type DayView, type EventRow, type Filters, getDayView, getNeighborhoods, hrefWith, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
-import { Calendar } from "./calendar";
+import { RangeCalendar } from "./calendar";
 import { DayPager, DayStrip, dayLabel } from "./day-strip";
 import { FilterForm } from "./filters";
 import { Star } from "./star";
@@ -48,8 +48,16 @@ export default async function Page({ searchParams }: Props) {
       </header>
 
       <aside className="sidebar">
-        <FilterForm filters={filters} day={day} neighborhoods={neighborhoods} />
-        <Calendar f={filters} today={today} day={day} days={days} counts={counts} />
+        <FilterForm
+          filters={filters}
+          day={day}
+          neighborhoods={neighborhoods}
+          calendar={
+            filters.when === "custom" ? (
+              <RangeCalendar f={filters} today={today} range={[days[0], addDays(days[days.length - 1], 1)]} counts={counts} />
+            ) : null
+          }
+        />
       </aside>
 
       <main className="line-area" id="events">
@@ -67,7 +75,7 @@ export default async function Page({ searchParams }: Props) {
               <div className="empty">
                 <h3>Nothing on {name.toLowerCase() === "today" ? "today" : name} with these filters</h3>
                 <p>Pick another day above, or loosen the filters.</p>
-                <a href={hrefWith(filters, { categories: [], free: false, neighborhood: "", q: "", limit: PAGE_SIZE })}>
+                <a href={hrefWith(filters, { categories: [], price: "any", times: [], weekendAny: false, neighborhood: "", q: "", limit: PAGE_SIZE })}>
                   Show everything on {name}
                 </a>
               </div>
