@@ -56,23 +56,26 @@ Rule: one source working end to end before adding more. Each phase ends with som
 - [x] Filters in the URL: when (today / weekend / 7 / 30 days), categories, free, neighborhood, search
 - [x] Works without JavaScript; mobile-first; sample data when Supabase isn't configured
 - [x] CI: typecheck, build and screenshots on every push (`.github/workflows/web.yml`)
-- [ ] Run `db/migrations/0006_web.sql` in Supabase (neighborhood list)
-- [ ] Deploy on Vercel: Root Directory `web`, env `SUPABASE_URL` + `SUPABASE_ANON_KEY`
+- [x] Run `db/migrations/0006_web.sql` and `0007` in Supabase
+- [x] Deploy on Vercel (events-app-chicago.vercel.app)
+- [x] Day strip + arrows, custom date range, price ranges, time of day with weekend override
+- [ ] Run `db/migrations/0008_day_counts.sql`
 - [ ] Check it on your phone with real data; note what's annoying
 
 ## Phase 7 — Showcase
 - [ ] Write-up + architecture diagram on the personal website
 
-## Phase 8 — Event recommendation chatbot
-Chat panel on the site: "I like jazz and cheap food, what's good this weekend near Logan Square?" → a few real events with links and why each fits.
-- [ ] Postgres function `search_events(...)` over `upcoming_events`: text query, date range, categories, free only, max price, neighborhood, limit (≤ 25)
-- [ ] Next.js API route that calls the Claude API with that function as a tool (API key stays server-side)
-- [ ] System prompt rules: today's date in Chicago; recommend only events the tool returned; give day, time, venue, price, link; ask one question if the request is too vague
-- [ ] Interests: `preferences` table (categories, neighborhoods, budget) + saved/liked events, passed in as context
-- [ ] Guardrails: rate limit per visitor, cap reply length, log questions without personal data
-- [ ] Test set: 10–15 sample asks; check that every recommended link came from a tool result
-- [ ] Later: pgvector embeddings for fuzzy asks ("something chill and artsy")
-- Done when: "free things this weekend in Pilsen" returns real events with working links and nothing invented
+## Phase 8 — Accounts and event assistant
+Design: project doc "Phase 8 — Event Recommendation Chatbot".
+- [x] Own API routes: `/api/events`, `/api/days`, `/api/saved`, `/api/preferences`, `/api/chat`
+- [x] Email-link sign-in (Supabase Auth); save star on events; `/saved`; default filters
+- [x] Assistant: Claude Haiku 5.5 with a `search_events` tool over the same query code
+- [x] Can only cite events returned by the search (unknown ids dropped)
+- [x] Invite list (`chat_users`), per-person daily messages, overall daily budget (`chat_settings`)
+- [ ] Run `db/migrations/0009_accounts_chat.sql`; Supabase Auth URL settings; invite yourself
+- [ ] `ANTHROPIC_API_KEY` in Vercel; set a spend limit in the Anthropic console too
+- [ ] Try 10–15 real asks; note bad picks and tune the prompt
+- [ ] Later: pgvector for fuzzy asks ("something chill and artsy"), weekly digest email
 
 ## Open questions (from the plan)
 - [ ] Categories that matter most?

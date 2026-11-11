@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatTime } from "@/lib/dates";
 import type { EventRow } from "@/lib/events";
 
 type Turn = { role: "user" | "assistant"; text: string; events?: EventRow[] };
@@ -13,7 +14,7 @@ const SUGGESTIONS = [
 ];
 
 const TZ = "America/Chicago";
-const whenFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const dayFmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short", month: "short", day: "numeric" });
 
 /** The invite-only event assistant: a button that opens a chat sheet. */
 export function ChatPanel({ remaining: initialRemaining, savedIds, preview }: {
@@ -171,9 +172,9 @@ function EventCard({ e, reason, saved, onSave }: { e: EventRow; reason: string; 
       <div>
         <a href={e.url} target="_blank" rel="noopener noreferrer" className="card-title">{e.title}</a>
         <p className="card-meta">
-          {whenFmt.format(new Date(e.start_at))}
+          {dayFmt.format(new Date(e.start_at))}, {formatTime(e.start_at)}
           {e.venue_name ? `, ${e.venue_name}` : ""}
-          {price ? <span className={e.is_free ? "price free" : "price"}> {price}</span> : null}
+          {price ? <>{". "}<span className={e.is_free ? "price free" : "price"}>{price}</span></> : null}
         </p>
         {reason ? <p className="card-why">{reason}</p> : null}
       </div>
