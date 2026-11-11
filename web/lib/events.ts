@@ -97,7 +97,7 @@ export type DayView = {
   sample: boolean;
 };
 
-function config() {
+export function supabaseConfig() {
   // Tolerate copy-paste extras: spaces, newlines, surrounding quotes, a trailing slash.
   const clean = (v: string | undefined) => v?.trim().replace(/^["']|["']$/g, "").trim();
   const url = clean(process.env.SUPABASE_URL)?.replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
@@ -135,7 +135,7 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
   const startIso = day === today ? now.toISOString() : chicagoMidnight(day).toISOString();
   const endIso = chicagoMidnight(addDays(day, 1)).toISOString();
 
-  const cfg = config();
+  const cfg = supabaseConfig();
   if (!cfg) return sampleView(f, now, today, days, day, startIso, endIso);
 
   const qs = new URLSearchParams();
@@ -201,7 +201,7 @@ export function timeFilterHours(f: Filters, day: string): number[] | null {
 }
 
 export async function getNeighborhoods(): Promise<string[]> {
-  const cfg = config();
+  const cfg = supabaseConfig();
   if (!cfg) return SAMPLE_NEIGHBORHOODS;
   const res = await fetch(`${cfg.url}/rest/v1/upcoming_neighborhoods?select=neighborhood&order=neighborhood.asc`, {
     headers: { apikey: cfg.key },

@@ -1,8 +1,11 @@
-import { category, SOURCE_NAMES } from "@/lib/categories";
-import { addDays, chicagoDate, chicagoMidnight, formatTime, isAllDay, TZ } from "@/lib/dates";
+import { addDays, chicagoMidnight, isAllDay, TZ } from "@/lib/dates";
 import { type DayView, type EventRow, type Filters, getDayView, getNeighborhoods, hrefWith, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
 import { RangeCalendar } from "./calendar";
 import { DayPager, DayStrip, dayLabel } from "./day-strip";
+import { redirect } from "next/navigation";
+import { type Account, filtersQuery, getAccount } from "@/lib/account";
+import { AccountBar } from "./account-bar";
+import { EventItem } from "./event-item";
 import { FilterForm } from "./filters";
 import { Star } from "./star";
 
@@ -11,10 +14,14 @@ export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 const longDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric" });
-const shortDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
 
 export default async function Page({ searchParams }: Props) {
-  const filters = parseFilters(await searchParams);
+  const raw = await searchParams;
+  const account = await getAccount();
+  // A bare visit opens with the signed-in person's default filters, if they saved some.
+  if (account.defaultFilters && Object.keys(raw).length === 0) redirect(`/?${account.defaultFilters}`);
+
+  const filters = parseFilters(raw);
   let view: DayView;
   let neighborhoods: string[];
   try {
@@ -27,10 +34,13 @@ export default async function Page({ searchParams }: Props) {
   const ongoing = events.filter((e) => e.start_at < dayStart);
   const onDay = events.filter((e) => e.start_at >= dayStart);
   const name = dayLabel(day, today);
+  const here = hrefWith(filters, { day });
+  const save = (id: string) => ({ signedIn: !!account.user, saved: account.savedIds.has(id), back: here });
 
   return (
     <div className="shell">
       <header className="masthead">
+        <AccountBar user={account.user} savedCount={account.savedIds.size} back={here} />
         <h1>
           <span className="city">Chicago</span>
           <span className="span">next 30 days</span>
@@ -58,6 +68,7 @@ export default async function Page({ searchParams }: Props) {
             ) : null
           }
         />
+        <DefaultFilters account={account} filters={filters} here={here} />
       </aside>
 
       <main className="line-area" id="events">
@@ -81,7 +92,7 @@ export default async function Page({ searchParams }: Props) {
               </div>
             ) : (
               <ul className="events">
-                {sortForDay(onDay).map((e) => <EventItem key={e.id} e={e} />)}
+                {sortForDay(onDay).map((e) => <EventItem key={e.id} e={e} save={save(e.id)} />)}
               </ul>
             )}
 
@@ -89,7 +100,7 @@ export default async function Page({ searchParams }: Props) {
               <>
                 <h3 className="sub">Still running</h3>
                 <ul className="events">
-                  {ongoing.map((e) => <EventItem key={e.id} e={e} untilFor={day} />)}
+                  {ongoing.map((e) => <EventItem key={e.id} e={e} untilFor={day} save={save(e.id)} />)}
                 </ul>
               </>
             ) : null}
@@ -127,50 +138,6 @@ function sortForDay(list: EventRow[]) {
   );
 }
 
-function EventItem({ e, untilFor }: { e: EventRow; untilFor?: string }) {
-  const cat = category(e.category_group);
-  const allDay = isAllDay(e.start_at, e.end_at);
-  const where = [e.venue_name, e.neighborhood && !e.venue_name?.includes(e.neighborhood) ? e.neighborhood : null]
-    .filter(Boolean)
-    .join(", ");
-  const price = priceText(e);
-  let when = allDay ? "All day" : formatTime(e.start_at);
-  if (untilFor && e.end_at) {
-    // Started on an earlier day: show when it ends instead of when it began.
-    const end = new Date(e.end_at);
-    when = chicagoDate(end) === untilFor ? `Until ${formatTime(e.end_at)}` : `Until ${shortDate.format(end)}`;
-  }
-  return (
-    <li className="event" id={`ev-${e.id}`}>
-      <time className="time" dateTime={e.start_at}>{when}</time>
-      <div className="body">
-        <a className="title" href={e.url} target="_blank" rel="noopener noreferrer">
-          {e.title}
-        </a>
-        {where ? <p className="where">{where}</p> : null}
-        <p className="meta">
-          <span className="cat">
-            <i className="dot" style={{ background: cat.color }} aria-hidden="true" />
-            {cat.label}
-          </span>
-          {price ? <span className={e.is_free ? "price free" : "price"}>{price}</span> : null}
-          <span className="src">via {SOURCE_NAMES[e.source_name] ?? e.source_name}</span>
-        </p>
-      </div>
-    </li>
-  );
-}
-
-function priceText(e: EventRow): string | null {
-  if (e.is_free) return "Free";
-  const lo = e.price_min != null ? Number(e.price_min) : null;
-  const hi = e.price_max != null ? Number(e.price_max) : null;
-  const fmt = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
-  if (lo == null && hi == null) return null;
-  if (lo != null && hi != null && hi > lo) return `${fmt(lo)}–${fmt(hi)}`;
-  return fmt((lo ?? hi)!);
-}
-
 function LoadFailed({ err }: { err: unknown }) {
   const known = err instanceof LoadError;
   return (
@@ -182,6 +149,33 @@ function LoadFailed({ err }: { err: unknown }) {
           <p>{known ? err.hint : "This usually clears up within a minute. Reload the page to try again."}</p>
         </div>
       </main>
+    </div>
+  );
+}
+
+/** "Make these my default": signed-in people can open the site with their usual filters. */
+function DefaultFilters({ account, filters, here }: { account: Account; filters: Filters; here: string }) {
+  if (!account.user) return null;
+  const current = filtersQuery(new URLSearchParams(hrefWith(filters).slice(2)));
+  const isDefault = account.defaultFilters === current;
+  return (
+    <div className="defaults">
+      {isDefault ? (
+        <p className="field-note">These are your default filters; the site opens with them.</p>
+      ) : (
+        <form method="post" action="/api/preferences">
+          <input type="hidden" name="query" value={current} />
+          <input type="hidden" name="back" value={here} />
+          <button type="submit" className="link-button">Make these my default filters</button>
+        </form>
+      )}
+      {account.defaultFilters ? (
+        <form method="post" action="/api/preferences">
+          <input type="hidden" name="clear" value="1" />
+          <input type="hidden" name="back" value={here} />
+          <button type="submit" className="link-button quiet">Stop using default filters</button>
+        </form>
+      ) : null}
     </div>
   );
 }

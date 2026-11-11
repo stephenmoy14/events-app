@@ -316,7 +316,7 @@ legend {
 
 .event {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   gap: 12px;
   padding: 12px 0;
   border-top: 1px solid var(--rule);
@@ -359,7 +359,7 @@ legend {
 .meta .price.free { color: var(--free); }
 
 @media (min-width: 640px) {
-  .event { grid-template-columns: 76px minmax(0, 1fr); }
+  .event { grid-template-columns: 76px minmax(0, 1fr) auto; }
   .time { font-size: 18px; }
 }
 
@@ -552,6 +552,98 @@ legend {
 .switch { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; cursor: pointer; font-size: 15px; }
 .switch input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; }
 .field-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); max-width: 42ch; }
+
+/* ---------- accounts ---------- */
+
+.masthead { position: relative; }
+.account {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.account a { text-decoration: none; }
+.account a:hover { text-decoration: underline; }
+.account form { margin: 0; }
+.account button {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.account button:hover { color: var(--ink); text-decoration: underline; }
+@media (min-width: 960px) {
+  .account { position: absolute; top: 28px; right: 0; margin: 0; }
+}
+
+.home { text-decoration: none; }
+.home:hover { text-decoration: underline; text-decoration-thickness: 4px; }
+
+.save-form { margin: 0; }
+.save {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #9aa6b2;
+  cursor: pointer;
+}
+.save:hover { color: var(--ink); background: #e4edf3; }
+.save.on { color: var(--star); }
+
+.defaults { display: grid; gap: 6px; margin: 4px 0 8px; }
+.defaults form { margin: 0; }
+.link-button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.link-button.quiet { color: var(--muted); font-weight: 500; font-size: 14px; }
+
+.shell.narrow { max-width: 720px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "main" "foot"; }
+.panel { grid-area: main; max-width: 520px; margin-top: 12px; }
+.panel h2 { font-size: 26px; font-stretch: 112%; margin: 0 0 8px; }
+.panel p { margin: 0 0 12px; }
+.error { color: #b00020; font-weight: 600; }
+.signin { display: grid; gap: 8px; margin-top: 8px; max-width: 420px; }
+.signin label { font-size: 14px; font-weight: 700; font-stretch: 112%; }
+.signin input {
+  font: inherit;
+  padding: 11px 12px;
+  border: 2px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.signin input:focus { border-color: var(--ink); outline: none; }
+.signin button {
+  justify-self: start;
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+}
 
 /* ---------- more, empty, footer ---------- */
 
