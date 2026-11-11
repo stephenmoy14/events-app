@@ -1,4 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 import { cookies } from "next/headers";
 import { supabaseConfig } from "./events";
 
@@ -13,7 +15,7 @@ export async function supabaseForRequest() {
   return createServerClient(cfg.url, cfg.key, {
     cookies: {
       getAll: () => store.getAll(),
-      setAll: (list) => {
+      setAll: (list: CookieToSet[]) => {
         try {
           list.forEach(({ name, value, options }) => store.set(name, value, options));
         } catch {

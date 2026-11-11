@@ -1,4 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 import { type NextRequest, NextResponse } from "next/server";
 
 /** Refreshes the visitor's sign-in session on each request so pages see a valid one. */
@@ -11,7 +13,7 @@ export async function middleware(request: NextRequest) {
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
-      setAll: (list) => {
+      setAll: (list: CookieToSet[]) => {
         list.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
