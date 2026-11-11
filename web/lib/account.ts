@@ -49,3 +49,13 @@ export function filtersQuery(params: URLSearchParams): string {
   }
   return keep.toString();
 }
+
+/** Chat access for the signed-in person: invited, and messages left today. */
+export async function getChatAccess(): Promise<{ invited: boolean; remaining: number }> {
+  if (!process.env.ANTHROPIC_API_KEY) return { invited: false, remaining: 0 };
+  const { supabase, user } = await currentUser();
+  if (!supabase || !user) return { invited: false, remaining: 0 };
+  const { data, error } = await supabase.rpc("chat_status");
+  if (error || !data?.invited) return { invited: false, remaining: 0 };
+  return { invited: true, remaining: Number(data.remaining ?? 0) };
+}

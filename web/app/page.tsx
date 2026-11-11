@@ -3,7 +3,8 @@ import { type DayView, type EventRow, type Filters, getDayView, getNeighborhoods
 import { RangeCalendar } from "./calendar";
 import { DayPager, DayStrip, dayLabel } from "./day-strip";
 import { redirect } from "next/navigation";
-import { type Account, filtersQuery, getAccount } from "@/lib/account";
+import { type Account, filtersQuery, getAccount, getChatAccess } from "@/lib/account";
+import { ChatPanel } from "./chat-panel";
 import { AccountBar } from "./account-bar";
 import { EventItem } from "./event-item";
 import { FilterForm } from "./filters";
@@ -17,7 +18,7 @@ const longDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long",
 
 export default async function Page({ searchParams }: Props) {
   const raw = await searchParams;
-  const account = await getAccount();
+  const [account, chatAccess] = await Promise.all([getAccount(), getChatAccess()]);
   // A bare visit opens with the signed-in person's default filters, if they saved some.
   if (account.defaultFilters && Object.keys(raw).length === 0) redirect(`/?${account.defaultFilters}`);
 
@@ -120,6 +121,8 @@ export default async function Page({ searchParams }: Props) {
 
         <DayPager f={filters} days={days} day={day} today={today} />
       </main>
+
+      {chatAccess.invited ? <ChatPanel remaining={chatAccess.remaining} savedIds={[...account.savedIds]} /> : null}
 
       <footer className="colophon">
         <p>
