@@ -15,3 +15,6 @@
 | 2026-11-10 | Duplicates hidden (`duplicate_of`), never deleted; recomputed every run | Reversible, and a wrong match fixes itself when rules improve |
 | 2026-11-10 | 12 fixed category groups mapped by keyword rules; raw label kept in `category` | Website filters and chatbot need one vocabulary; rules are easy to tune |
 | 2026-11-10 | Neighborhoods via point-in-polygon on city community areas, no PostGIS | 77 polygons, pure Python, no new dependency |
+| 2026-11-11 | Own Next.js API routes in front of Supabase's generated API | Defined endpoints and inputs; Supabase becomes an implementation detail |
+| 2026-11-11 | Accounts via Supabase Auth email links; saved events and default filters | Personal features without passwords; row rules keep data private |
+| 2026-11-11 | Dropped the event chatbot after building it | Little gain over the filters for the cost and upkeep |

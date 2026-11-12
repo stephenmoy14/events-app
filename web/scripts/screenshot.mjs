@@ -16,8 +16,6 @@ const shots = [
   ["mobile-custom-range", phone, "/?when=custom&from=__DAY2__&to=__DAY6__&day=__DAY4__", false, async (p) => p.evaluate(() => window.scrollTo(0, 230))],
   ["mobile-more-filters", phone, "/?when=week&time=evening&time=night&wkend=1&price=20", false, async (p) => p.evaluate(() => document.querySelector(".more-filters").scrollIntoView())],
   ["desktop-custom", desktop, "/?when=custom&from=__DAY2__&to=__DAY6__&time=evening&wkend=1", false],
-  ["mobile-chat", phone, "/preview/chat", false],
-  ["desktop-chat", desktop, "/preview/chat", false],
   ["mobile-login", phone, "/login", false],
 ];
 

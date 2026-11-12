@@ -59,23 +59,19 @@ Rule: one source working end to end before adding more. Each phase ends with som
 - [x] Run `db/migrations/0006_web.sql` and `0007` in Supabase
 - [x] Deploy on Vercel (events-app-chicago.vercel.app)
 - [x] Day strip + arrows, custom date range, price ranges, time of day with weekend override
-- [ ] Run `db/migrations/0008_day_counts.sql`
 - [ ] Check it on your phone with real data; note what's annoying
 
 ## Phase 7 — Showcase
 - [ ] Write-up + architecture diagram on the personal website
 
-## Phase 8 — Accounts and event assistant
-Design: project doc "Phase 8 — Event Recommendation Chatbot".
-- [x] Own API routes: `/api/events`, `/api/days`, `/api/saved`, `/api/preferences`, `/api/chat`
+## Phase 8 — Accounts and own API
+The event chatbot was designed and built, then dropped (2026-11-11): not enough gain over
+the filters. The design stays in the project doc for reference.
+- [x] Own API routes: `/api/events`, `/api/days`, `/api/saved`, `/api/preferences`
 - [x] Email-link sign-in (Supabase Auth); save star on events; `/saved`; default filters
-- [x] Assistant: Claude Haiku 5.5 with a `search_events` tool over the same query code
-- [x] Can only cite events returned by the search (unknown ids dropped)
-- [x] Invite list (`chat_users`), per-person daily messages, overall daily budget (`chat_settings`)
-- [ ] Run `db/migrations/0009_accounts_chat.sql`; Supabase Auth URL settings; invite yourself
-- [ ] `ANTHROPIC_API_KEY` in Vercel; set a spend limit in the Anthropic console too
-- [ ] Try 10–15 real asks; note bad picks and tune the prompt
-- [ ] Later: pgvector for fuzzy asks ("something chill and artsy"), weekly digest email
+- [ ] Run `db/migrations/0008_day_counts.sql` and `0009_accounts.sql`
+- [ ] Supabase Auth → URL Configuration: Site URL + redirect URL for the Vercel domain
+- [ ] Sign in, save a few events, set default filters
 
 ## Open questions (from the plan)
 - [ ] Categories that matter most?
