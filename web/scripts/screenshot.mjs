@@ -9,13 +9,16 @@ mkdirSync(out, { recursive: true });
 const desktop = { width: 1280, height: 1000 };
 const phone = { width: 390, height: 844 };
 // [name, viewport, path, fullPage, before-screenshot action]
+const openSheet = async (p) => { await p.click(".sheet-toggle"); await p.waitForTimeout(150); };
 const shots = [
   ["desktop-week", desktop, "/?when=week", false],
+  ["desktop-filtered", desktop, "/?when=week&cat=music&cat=comedy&price=20&time=evening&time=night&wkend=1", false],
   ["mobile-week", phone, "/?when=week", false],
-  ["mobile-custom-start", phone, "/?when=custom", false, async (p) => p.evaluate(() => window.scrollTo(0, 230))],
-  ["mobile-custom-range", phone, "/?when=custom&from=__DAY2__&to=__DAY6__&day=__DAY4__", false, async (p) => p.evaluate(() => window.scrollTo(0, 230))],
-  ["mobile-more-filters", phone, "/?when=week&time=evening&time=night&wkend=1&price=20", false, async (p) => p.evaluate(() => document.querySelector(".more-filters").scrollIntoView())],
-  ["desktop-custom", desktop, "/?when=custom&from=__DAY2__&to=__DAY6__&time=evening&wkend=1", false],
+  ["mobile-scrolled", phone, "/?when=week", false, async (p) => p.evaluate(() => window.scrollTo(0, 700))],
+  ["mobile-filtered", phone, "/?when=week&cat=music&price=20&time=evening&wkend=1", false],
+  ["mobile-sheet", phone, "/?when=week&cat=music", false, openSheet],
+  ["mobile-sheet-lower", phone, "/?when=week&cat=music", false, async (p) => { await openSheet(p); await p.evaluate(() => document.querySelector(".sheet-body").scrollTo(0, 700)); }],
+  ["mobile-custom-sheet", phone, "/?when=custom&from=__DAY2__&to=__DAY6__", false, openSheet],
   ["mobile-login", phone, "/login", false],
 ];
 
