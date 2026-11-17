@@ -409,8 +409,8 @@ legend {
 
 .stops {
   /* fade at the edges so it's clear the row scrolls */
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
   list-style: none;
   margin: 0;
   padding: 0 4px;
@@ -682,6 +682,12 @@ a.chip:hover { background: var(--ink); color: #fff; }
 .chip.fixed { background: var(--ink); color: #fff; }
 .chip.clear-all { border-color: transparent; text-decoration: underline; }
 .applied .defaults { margin: 8px 0 0; }
+
+/* phones: the keyboard's Go button searches, so the box gets the room */
+@media (max-width: 959px) {
+  .search button { display: none; }
+  .search input { height: 46px; }
+}
 
 /* while new results load */
 html[data-loading] .line,
