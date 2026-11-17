@@ -20,7 +20,11 @@ export function EventItem({ e, untilFor, save }: {
   if (untilFor && e.end_at) {
     // Started on an earlier day: show when it ends instead of when it began.
     const end = new Date(e.end_at);
-    when = chicagoDate(end) === untilFor ? `Until ${formatTime(e.end_at)}` : `Until ${shortDate.format(end)}`;
+    const endsAtMidnight = formatTime(e.end_at) === "11:59pm";
+    when =
+      chicagoDate(end) === untilFor
+        ? endsAtMidnight ? "All day" : `Until ${formatTime(e.end_at)}`
+        : `Until ${shortDate.format(end)}`;
   }
   return (
     <li className="event" id={`ev-${e.id}`}>

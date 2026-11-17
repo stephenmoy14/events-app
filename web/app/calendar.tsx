@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { addDays, chicagoMidnight, TZ } from "@/lib/dates";
 import { type Filters, hrefWith, PAGE_SIZE, WINDOW_DAYS } from "@/lib/events";
 
@@ -63,14 +64,15 @@ export function RangeCalendar({ f, today, range, counts }: {
                   return (
                     <td key={di} className={cls || undefined}>
                       {inWindow ? (
-                        <a
+                        <Link
+                          scroll={false}
                           href={linkFor(d)}
                           aria-label={`${longDay.format(chicagoMidnight(d))}${hasCounts ? `: ${n} ${n === 1 ? "event" : "events"}` : ""}`}
                           aria-pressed={picked || undefined}
                         >
                           <span className="dn">{Number(d.slice(8))}</span>
                           <span className={`busy l${level}`} aria-hidden="true" />
-                        </a>
+                        </Link>
                       ) : (
                         <span className="dn out">{Number(d.slice(8))}</span>
                       )}

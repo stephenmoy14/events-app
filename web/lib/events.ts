@@ -94,6 +94,7 @@ export type DayView = {
   counts: Record<string, number>; // events per day, today .. today+30, with filters
   events: EventRow[];           // selected day
   total: number;                // selected day
+  rangeTotal: number;           // whole range (each event once)
   sample: boolean;
 };
 
@@ -156,9 +157,27 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
   qs.set("order", "start_at.asc,title.asc");
   qs.set("limit", String(f.limit));
 
+  // The whole range, counted once per event (for the header).
+  const rs = new URLSearchParams();
+  const rangeStart = from === today ? now.toISOString() : chicagoMidnight(from).toISOString();
+  rs.set("select", "id");
+  rs.set("start_at", `lt.${chicagoMidnight(to).toISOString()}`);
+  const rc = [`or(start_at.gte.${rangeStart},end_at.gte.${rangeStart})`];
+  if (f.q) rc.push(`or(title.ilike.*${f.q}*,venue_name.ilike.*${f.q}*,neighborhood.ilike.*${f.q}*)`);
+  if (f.price === "free") rs.set("is_free", "is.true");
+  else if (f.price !== "any") rc.push(`or(is_free.is.true,price_min.lt.${f.price})`);
+  if (f.times.length) {
+    const h = `and(all_day.is.false,start_hour.in.(${allowedHours(f.times).join(",")}))`;
+    rc.push(f.weekendAny ? `or(start_dow.in.(6,7),${h})` : h);
+  }
+  rs.set("and", `(${rc.join(",")})`);
+  if (f.categories.length) rs.set("category_group", `in.(${f.categories.join(",")})`);
+  if (f.neighborhood) rs.set("neighborhood", `eq.${f.neighborhood}`);
+  rs.set("limit", "1");
+
   const headers = { apikey: cfg.key, "Content-Type": "application/json" };
   // Always fresh: one quick query per view, and a bad moment can't get stuck in a cache.
-  const [eventsRes, countsRes] = await Promise.all([
+  const [eventsRes, countsRes, rangeRes] = await Promise.all([
     fetch(`${cfg.url}/rest/v1/upcoming_events?${qs}`, { headers: { ...headers, Prefer: "count=exact" }, cache: "no-store" }),
     fetch(`${cfg.url}/rest/v1/rpc/event_day_counts`, {
       method: "POST",
@@ -175,6 +194,7 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
         p_weekend_any: f.weekendAny,
       }),
     }),
+    fetch(`${cfg.url}/rest/v1/upcoming_events?${rs}`, { headers: { ...headers, Prefer: "count=exact" }, cache: "no-store" }),
   ]);
   if (!eventsRes.ok) throw new LoadError(eventsRes.status, await eventsRes.text());
   // Counts are a nice-to-have: without them (e.g. before migration 0008) the page still works.
@@ -185,7 +205,13 @@ export async function getDayView(f: Filters, now = new Date()): Promise<DayView>
   const total = Number(eventsRes.headers.get("content-range")?.split("/")[1] ?? events.length);
   const counts: Record<string, number> = {};
   for (const r of countRows) counts[r.day] = Number(r.events);
-  return { today, days, day, counts, events, total: Number.isFinite(total) ? total : events.length, sample: false };
+  const rangeTotal = rangeRes.ok ? Number(rangeRes.headers.get("content-range")?.split("/")[1]) : NaN;
+  const dayTotal = Number.isFinite(total) ? total : events.length;
+  return {
+    today, days, day, counts, events, total: dayTotal,
+    rangeTotal: Number.isFinite(rangeTotal) ? rangeTotal : dayTotal,
+    sample: false,
+  };
 }
 
 function allowedHours(times: TimeKey[]): number[] {
@@ -244,6 +270,9 @@ function sampleView(f: Filters, now: Date, today: string, days: string[], day: s
     if (n) counts[d] = n;
   }
   const events = rows.filter((e) => overlaps(e, startIso, endIso, day));
-  return { today, days, day, counts, events: events.slice(0, f.limit), total: events.length, sample: true };
+  const rangeTotal = rows.filter((e) =>
+    days.some((d) => overlaps(e, d === today ? now.toISOString() : chicagoMidnight(d).toISOString(), chicagoMidnight(addDays(d, 1)).toISOString(), d)),
+  ).length;
+  return { today, days, day, counts, events: events.slice(0, f.limit), total: events.length, rangeTotal, sample: true };
 }
 

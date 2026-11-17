@@ -68,14 +68,6 @@ a { color: inherit; }
     grid-template-areas: "head head" "side main" "foot foot";
     column-gap: 48px;
   }
-  .sidebar {
-    position: sticky;
-    top: 24px;
-    align-self: start;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    padding-bottom: 24px;
-  }
 }
 
 /* ---------- masthead ---------- */
@@ -126,10 +118,14 @@ a { color: inherit; }
 /* ---------- filters ---------- */
 
 .filters {
-  margin: 20px 0 8px;
+  margin: 18px 0 4px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);   /* never wider than the sidebar */
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;   /* phones: search | Filters */
+  gap: 8px;
+  align-items: start;
+}
+@media (min-width: 960px) {
+  .filters { grid-template-columns: minmax(0, 1fr); gap: 18px; }
 }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 legend {
@@ -260,16 +256,13 @@ legend {
 .stop { position: relative; margin-bottom: 28px; }
 
 .stop h2 {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  position: relative;
   margin: 0 0 6px;
   padding: 10px 0 10px calc(var(--rail) + 24px);
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 2px 12px;
-  background: linear-gradient(var(--paper) 80%, rgba(245, 248, 250, 0));
   line-height: 1.1;
 }
 .stop h2::before {               /* keep the line running behind the sticky heading */
@@ -301,6 +294,11 @@ legend {
   font-size: 26px;
   font-weight: 800;
   font-stretch: 125%;
+}
+.stop .count {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
 }
 .stop .date {
   font-size: 17px;
@@ -374,12 +372,24 @@ legend {
 /* ---------- day strip: the range as a horizontal stretch of line ---------- */
 
 .strip {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 4px;
-  margin: 18px 0 4px;
+  margin: 10px calc(-1 * var(--gutter)) 4px;
+  padding: 6px var(--gutter) 4px;
+  background: var(--paper);
+  box-shadow: 0 1px 0 var(--rule);
 }
+.strip .arrow { display: none !important; }
+@media (min-width: 960px) {
+  .strip { grid-template-columns: 36px minmax(0, 1fr) 36px; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+  .strip .arrow { display: grid !important; }
+}
+.events-anchor { scroll-margin-top: 0; }
 .strip .arrow {
   display: grid;
   place-items: center;
@@ -398,6 +408,9 @@ legend {
 .strip .arrow.off { border-color: var(--rule); color: var(--rule); }
 
 .stops {
+  /* fade at the edges so it's clear the row scrolls */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 28px), transparent 100%);
   list-style: none;
   margin: 0;
   padding: 0 4px;
@@ -455,7 +468,7 @@ legend {
 
 .pager {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin: 20px 0 0 calc(var(--rail) + 24px);
 }
@@ -518,32 +531,6 @@ legend {
 .busy.l3 { width: 11px; height: 11px; background: #1d8fc0; }
 .cal-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 
-/* ---------- more filters ---------- */
-
-.more-filters > summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border: 2px solid var(--rule);
-  border-radius: 999px;
-  background: var(--surface);
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-  list-style: none;
-}
-.more-filters > summary::-webkit-details-marker { display: none; }
-.more-filters > summary::after { content: "▾"; font-size: 12px; }
-.more-filters[open] > summary::after { content: "▴"; }
-.more-filters > fieldset,
-.more-filters > .hood-field { margin-top: 18px; }
-@media (min-width: 960px) {
-  /* opened by script on wide screens; the button stays if that never happens */
-  .more-filters[open] > summary { display: none; }
-  .more-filters[open] > fieldset:first-of-type { margin-top: 0; }
-}
-
 .pills.wrap,
 .when .pills { flex-wrap: wrap; overflow: visible; }
 .pill small { font-size: 12px; color: var(--muted); font-weight: 500; }
@@ -552,6 +539,153 @@ legend {
 .switch { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; cursor: pointer; font-size: 15px; }
 .switch input { width: 20px; height: 20px; accent-color: var(--ink); margin: 0; }
 .field-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); max-width: 42ch; }
+
+/* ---------- filter sheet (phones) / sidebar (wide) ---------- */
+
+.toolbar { min-width: 0; }
+.sheet { display: contents; }
+.sheet-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.sheet-toggle::-webkit-details-marker { display: none; }
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--star);
+  color: #fff;
+  font-size: 13px;
+}
+.sheet-backdrop,
+.sheet-body { display: none; }
+
+/* phones: the open sheet slides over the page */
+@media (max-width: 959px) {
+  .sheet[open] .sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(20, 35, 58, 0.45);
+  }
+  .sheet[open] .sheet-body {
+    display: block;
+    position: fixed;
+    z-index: 41;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 0 var(--gutter) 24px;
+    background: var(--paper);
+    border-radius: 16px 16px 0 0;
+    border-top: 6px solid var(--line);
+  }
+  .sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0 12px;
+    margin-bottom: 4px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .sheet-head h2 { margin: 0; font-size: 22px; font-weight: 800; font-stretch: 125%; }
+}
+.sheet-done {
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+}
+
+/* wide screens: the sheet is just the sidebar */
+@media (min-width: 960px) {
+  .sheet-toggle,
+  .sheet-head { display: none; }
+  .sheet[open] .sheet-body,
+  .sheet-body { display: block; }
+}
+
+/* clear sections inside the filters */
+.section {
+  margin: 0;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.section:last-child { border-bottom: 0; }
+.section legend,
+.section .legend {
+  float: left;            /* lets the legend sit inside the padded box */
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  font-stretch: 112%;
+}
+.section legend + * { clear: both; }
+
+.quick-pick {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* applied filters */
+.applied { margin: 4px 0 6px; }
+.applied ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+}
+a.chip:hover { background: var(--ink); color: #fff; }
+.chip.fixed { background: var(--ink); color: #fff; }
+.chip.clear-all { border-color: transparent; text-decoration: underline; }
+.applied .defaults { margin: 8px 0 0; }
+
+/* while new results load */
+html[data-loading] .line,
+html[data-loading] .stops { opacity: 0.55; transition: opacity 0.15s; }
 
 /* ---------- accounts ---------- */
 

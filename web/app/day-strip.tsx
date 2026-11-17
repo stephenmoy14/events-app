@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { addDays, chicagoMidnight, TZ } from "@/lib/dates";
 import { type Filters, hrefWith, PAGE_SIZE } from "@/lib/events";
 import { ScrollToCurrent } from "./scroll-to-current";
@@ -21,11 +22,12 @@ export function DayStrip({ f, days, day, today, counts }: {
   const i = days.indexOf(day);
   const prev = i > 0 ? days[i - 1] : null;
   const next = i < days.length - 1 ? days[i + 1] : null;
-  const go = (d: string) => hrefWith(f, { day: d, limit: PAGE_SIZE });
+  // Jump to the top of the list (the strip stays pinned there).
+  const go = (d: string) => hrefWith(f, { day: d, limit: PAGE_SIZE }, "#events");
   return (
     <nav className="strip" aria-label="Choose a day">
       {prev ? (
-        <a className="arrow" href={go(prev)} aria-label={`Previous day, ${long.format(chicagoMidnight(prev))}`}>‹</a>
+        <Link className="arrow" href={go(prev)} aria-label={`Previous day, ${long.format(chicagoMidnight(prev))}`}>‹</Link>
       ) : (
         <span className="arrow off" aria-hidden="true">‹</span>
       )}
@@ -35,7 +37,7 @@ export function DayStrip({ f, days, day, today, counts }: {
           const current = d === day;
           return (
             <li key={d}>
-              <a
+              <Link
                 href={go(d)}
                 className={current ? "current" : undefined}
                 aria-current={current ? "date" : undefined}
@@ -45,13 +47,13 @@ export function DayStrip({ f, days, day, today, counts }: {
                 <span className="node" aria-hidden="true">{d === today ? <Star size={18} /> : null}</span>
                 <span className="num">{dayNum(d)}</span>
                 {Object.keys(counts).length ? <span className="n">{n.toLocaleString("en-US")}</span> : null}
-              </a>
+              </Link>
             </li>
           );
         })}
       </ol>
       {next ? (
-        <a className="arrow" href={go(next)} aria-label={`Next day, ${long.format(chicagoMidnight(next))}`}>›</a>
+        <Link className="arrow" href={go(next)} aria-label={`Next day, ${long.format(chicagoMidnight(next))}`}>›</Link>
       ) : (
         <span className="arrow off" aria-hidden="true">›</span>
       )}
@@ -62,14 +64,13 @@ export function DayStrip({ f, days, day, today, counts }: {
 
 export function DayPager({ f, days, day, today }: { f: Filters; days: string[]; day: string; today: string }) {
   const i = days.indexOf(day);
-  const prev = i > 0 ? days[i - 1] : null;
   const next = i < days.length - 1 ? days[i + 1] : null;
-  if (!prev && !next) return null;
-  const go = (d: string) => hrefWith(f, { day: d, limit: PAGE_SIZE });
+  if (!next) return null;
   return (
-    <nav className="pager" aria-label="Previous and next day">
-      {prev ? <a href={go(prev)} rel="prev">‹ {dayLabel(prev, today)}</a> : <span />}
-      {next ? <a href={go(next)} rel="next">{dayLabel(next, today)} ›</a> : <span />}
+    <nav className="pager" aria-label="Next day">
+      <Link href={hrefWith(f, { day: next, limit: PAGE_SIZE }, "#events")} rel="next">
+        Next day: {dayLabel(next, today)} ›
+      </Link>
     </nav>
   );
 }

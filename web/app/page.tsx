@@ -2,10 +2,12 @@ import { addDays, chicagoMidnight, isAllDay, TZ } from "@/lib/dates";
 import { type DayView, type EventRow, type Filters, getDayView, getNeighborhoods, hrefWith, LoadError, PAGE_SIZE, parseFilters } from "@/lib/events";
 import { RangeCalendar } from "./calendar";
 import { DayPager, DayStrip, dayLabel } from "./day-strip";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { type Account, filtersQuery, getAccount } from "@/lib/account";
 import { AccountBar } from "./account-bar";
 import { EventItem } from "./event-item";
+import { AppliedFilters } from "./applied";
 import { FilterForm } from "./filters";
 import { Star } from "./star";
 
@@ -29,7 +31,7 @@ export default async function Page({ searchParams }: Props) {
   } catch (err) {
     return <LoadFailed err={err} />;
   }
-  const { today, day, days, counts, events, total } = view;
+  const { today, day, days, counts, events, total, rangeTotal } = view;
   const dayStart = chicagoMidnight(day).toISOString();
   const ongoing = events.filter((e) => e.start_at < dayStart);
   const onDay = events.filter((e) => e.start_at >= dayStart);
@@ -47,10 +49,7 @@ export default async function Page({ searchParams }: Props) {
         </h1>
         <div className="stripes" aria-hidden="true" />
         <p className="summary" aria-live="polite">
-          {total.toLocaleString("en-US")} {total === 1 ? "event" : "events"}
-          {day === today ? " left today" : ` on ${name}, ${longDate.format(chicagoMidnight(day))}`}
-          {filters.neighborhood ? ` in ${filters.neighborhood}` : ""}
-          {filters.q ? ` matching “${filters.q}”` : ""}
+          {rangeTotal.toLocaleString("en-US")} {rangeTotal === 1 ? "event" : "events"} {rangePhrase(filters, days)}
         </p>
         {view.sample ? (
           <p className="notice">Showing built-in sample events. Set SUPABASE_URL and SUPABASE_ANON_KEY to load real listings.</p>
@@ -60,6 +59,7 @@ export default async function Page({ searchParams }: Props) {
       <aside className="sidebar">
         <FilterForm
           filters={filters}
+          total={rangeTotal}
           day={day}
           neighborhoods={neighborhoods}
           calendar={
@@ -68,10 +68,13 @@ export default async function Page({ searchParams }: Props) {
             ) : null
           }
         />
-        <DefaultFilters account={account} filters={filters} here={here} />
       </aside>
 
-      <main className="line-area" id="events">
+      <main className="line-area">
+        <AppliedFilters f={filters} day={day} range={[days[0], days[days.length - 1]]}>
+          <DefaultFilters account={account} filters={filters} here={here} />
+        </AppliedFilters>
+        <div id="events" className="events-anchor" />
         <DayStrip f={filters} days={days} day={day} today={today} counts={counts} />
 
         <div className="line">
@@ -80,15 +83,16 @@ export default async function Page({ searchParams }: Props) {
               <span className="marker" aria-hidden="true">{day === today ? <Star /> : null}</span>
               <span className="day">{name}</span>
               <span className="date">{longDate.format(chicagoMidnight(day))}</span>
+              <span className="count">{total.toLocaleString("en-US")} {total === 1 ? "event" : "events"}</span>
             </h2>
 
             {events.length === 0 ? (
               <div className="empty">
                 <h3>Nothing on {name.toLowerCase() === "today" ? "today" : name} with these filters</h3>
                 <p>Pick another day above, or loosen the filters.</p>
-                <a href={hrefWith(filters, { categories: [], price: "any", times: [], weekendAny: false, neighborhood: "", q: "", limit: PAGE_SIZE })}>
+                <Link scroll={false} href={hrefWith(filters, { day, categories: [], price: "any", times: [], weekendAny: false, neighborhood: "", q: "", limit: PAGE_SIZE })}>
                   Show everything on {name}
-                </a>
+                </Link>
               </div>
             ) : (
               <ul className="events">
@@ -108,9 +112,9 @@ export default async function Page({ searchParams }: Props) {
 
           {events.length < total ? (
             <div className="more">
-              <a href={hrefWith(filters, { day, limit: filters.limit + PAGE_SIZE }, `#ev-${events[events.length - 1]?.id}`)}>
+              <Link scroll={false} href={hrefWith(filters, { day, limit: filters.limit + PAGE_SIZE })}>
                 Show {Math.min(PAGE_SIZE, total - events.length)} more
-              </a>
+              </Link>
               <span>
                 {events.length.toLocaleString("en-US")} of {total.toLocaleString("en-US")} shown
               </span>
@@ -129,6 +133,22 @@ export default async function Page({ searchParams }: Props) {
       </footer>
     </div>
   );
+}
+
+const shortDay = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
+
+function rangePhrase(f: Filters, days: string[]): string {
+  switch (f.when) {
+    case "today": return "left today";
+    case "weekend": return "this weekend";
+    case "week": return "in the next 7 days";
+    case "month": return "in the next 30 days";
+    case "custom": {
+      const a = shortDay.format(chicagoMidnight(days[0]));
+      const b = shortDay.format(chicagoMidnight(days[days.length - 1]));
+      return days.length === 1 ? `on ${a}` : `from ${a} to ${b}`;
+    }
+  }
 }
 
 function sortForDay(list: EventRow[]) {
