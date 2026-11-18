@@ -3,7 +3,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { supabaseConfig } from "@/lib/events";
 import { ALSO_KNOWN_AS, SIDES } from "@/lib/neighborhoods";
 
-type Suggestion = { kind: "venue" | "area" | "event" | "category"; label: string; value: string; events?: number };
+type Suggestion = { kind: "venue" | "area" | "event" | "category"; label: string; value: string; events?: number; hint?: string };
 
 /** GET /api/suggest?q=… — what to suggest while someone types in the search box. */
 export async function GET(request: Request) {
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   // Neighborhoods by everyday name ("Pilsen" → Lower West Side) and categories.
   for (const [area, names] of Object.entries(ALSO_KNOWN_AS)) {
-    for (const n of names) if (n.toLowerCase().startsWith(lower)) out.push({ kind: "area", label: `${n} (${area})`, value: n });
+    for (const n of names) if (n.toLowerCase().startsWith(lower)) out.push({ kind: "area", label: n, value: n, hint: area });
   }
   for (const { areas } of SIDES) for (const a of areas) if (a.toLowerCase().startsWith(lower)) out.push({ kind: "area", label: a, value: a });
   for (const c of CATEGORIES) if (c.label.toLowerCase().includes(lower) && c.key !== "other") out.push({ kind: "category", label: c.label, value: c.key });

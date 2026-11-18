@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Suggestion = { kind: "venue" | "area" | "event" | "category"; label: string; value: string; events?: number };
+type Suggestion = { kind: "venue" | "area" | "event" | "category"; label: string; value: string; events?: number; hint?: string };
 const KIND: Record<Suggestion["kind"], string> = { venue: "Venue", area: "Neighborhood", event: "Event", category: "Category" };
 
 /** Search box with suggestions as you type (venues, neighborhoods, events, categories). */
@@ -56,7 +56,7 @@ export function SearchBox({ defaultValue }: { defaultValue: string }) {
         name="q"
         type="search"
         value={value}
-        placeholder="Search: jazz, Thalia Hall, Pilsen"
+        placeholder="Search events, venues, areas"
         autoComplete="off"
         role="combobox"
         aria-expanded={open && items.length > 0}
@@ -85,7 +85,7 @@ export function SearchBox({ defaultValue }: { defaultValue: string }) {
               onMouseDown={(e) => { e.preventDefault(); choose(s); }}
             >
               <span className="s-label">{s.label}</span>
-              <span className="s-kind">{KIND[s.kind]}{s.events ? `, ${s.events}` : ""}</span>
+              <span className="s-kind">{s.hint ?? KIND[s.kind]}{s.events ? `, ${s.events}` : ""}</span>
             </li>
           ))}
         </ul>
