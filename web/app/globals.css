@@ -137,7 +137,7 @@ legend {
 }
 
 .search { display: flex; gap: 8px; }
-.search input {
+.search > input {
   flex: 1;
   min-width: 0;
   font: inherit;
@@ -147,7 +147,7 @@ legend {
   background: var(--surface);
   color: var(--ink);
 }
-.search input:focus { border-color: var(--ink); outline: none; }
+.search > input:focus { border-color: var(--ink); outline: none; }
 .search button,
 .empty button {
   font: inherit;
@@ -486,50 +486,152 @@ legend {
 
 .calendar {
   margin-top: 14px;
-  padding: 14px;
   border: 2px solid var(--rule);
   border-radius: 14px;
   background: var(--surface);
-  max-width: 380px;
+  max-width: 400px;
 }
-.cal-status { margin: 0 0 4px; font-weight: 600; font-size: 15px; }
-.month { border-collapse: collapse; margin-top: 10px; width: 100%; table-layout: fixed; }
-.month caption { text-align: left; font-weight: 700; font-stretch: 112%; padding-bottom: 6px; }
-.month th { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 4px; }
-.month td { text-align: center; padding: 1px 0; height: 42px; vertical-align: top; }
+.calendar[open] { padding-bottom: 12px; }
+.cal-boxes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.cal-boxes::-webkit-details-marker { display: none; }
+.cal-boxes .box {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 2px solid var(--rule);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.cal-boxes .box small { font-size: 12px; font-weight: 600; color: var(--muted); }
+.cal-boxes .box.active { border-color: var(--ink); box-shadow: 0 0 0 2px var(--line); }
+.cal-boxes .arrow-to { align-self: center; color: var(--muted); font-weight: 700; }
+.cal-boxes .change { grid-column: 1 / -1; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.calendar[open] .cal-boxes .change { display: none; }
+.cal-status { margin: 0 12px 8px; font-weight: 600; font-size: 15px; }
+.cal-shortcuts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 12px 6px; }
+.pill-link {
+  padding: 5px 11px;
+  border: 2px solid var(--rule);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+}
+.pill-link:hover { border-color: var(--ink); }
+
+.month { border-collapse: separate; border-spacing: 2px; margin: 8px 10px 0; width: calc(100% - 20px); table-layout: fixed; }
+.month caption { text-align: left; font-weight: 700; font-stretch: 112%; padding: 4px 2px 6px; }
+.month th { font-size: 12px; font-weight: 600; color: var(--muted); padding-bottom: 2px; }
+.month td { text-align: center; padding: 0; height: 46px; vertical-align: top; border-radius: 8px; }
 .month a,
 .month .dn.out {
   display: grid;
   justify-items: center;
-  align-content: start;
-  gap: 3px;
-  height: 40px;
-  padding-top: 5px;
+  align-content: center;
+  gap: 1px;
+  height: 46px;
   text-decoration: none;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  font-size: 15px;
   border-radius: 8px;
 }
-.month a:hover { background: #e4edf3; }
-.month .dn.out { color: #b3bec8; }
-.month td.today .dn { color: var(--star); font-weight: 800; }
-/* the chosen range reads as a band; its ends are solid */
-.month td.in a { background: #dcecf5; border-radius: 0; }
-.month td.start a { border-radius: 8px 0 0 8px; }
-.month td.end a { border-radius: 0 8px 8px 0; }
-.month td.start.end a { border-radius: 8px; }
+.month .dn { font-size: 15px; font-weight: 700; }
+.month .cn { font-size: 11px; color: var(--muted); }
+.month .dn.out { color: #b3bec8; font-weight: 500; }
+/* busier days are darker */
+.month td.busy1 { background: #eef6fb; }
+.month td.busy2 { background: #d6ebf6; }
+.month td.busy3 { background: #b4dbef; }
+.month a:hover { outline: 2px solid var(--ink); outline-offset: -2px; }
+.month td.today .dn { color: var(--star); }
+.month td.in { background: #9fd0ea; }
+.month td.start,
+.month td.end { background: var(--ink); }
 .month td.start a,
-.month td.end a { background: var(--ink); color: #fff; }
+.month td.end a,
 .month td.start .dn,
 .month td.end .dn { color: #fff; }
-.month td.start .busy,
-.month td.end .busy { background: #fff; }
-.busy { border-radius: 50%; background: var(--line); }
-.busy.l1 { width: 5px; height: 5px; }
-.busy.l2 { width: 8px; height: 8px; }
-.busy.l3 { width: 11px; height: 11px; background: #1d8fc0; }
-.cal-note { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+.month td.start .cn,
+.month td.end .cn { color: #cfe3ee; }
+.cal-note { margin: 8px 12px 0; font-size: 13px; color: var(--muted); }
+
+/* ---------- where: neighborhoods by side ---------- */
+
+.areas { display: grid; gap: 8px; }
+.area-find {
+  font: inherit;
+  padding: 9px 11px;
+  border: 2px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.area-find:focus { border-color: var(--ink); outline: none; }
+.side { border-top: 1px solid var(--rule); }
+.side > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.side > summary::-webkit-details-marker { display: none; }
+.side > summary::after { content: "▾"; margin-left: auto; font-size: 12px; color: var(--muted); }
+.side[open] > summary::after { content: "▴"; }
+.side .pills { padding-bottom: 10px; }
+.pill span small { margin-left: 2px; }
+
+/* ---------- search suggestions ---------- */
+
+.search-box { position: relative; flex: 1; min-width: 0; }
+.search-box input {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 2px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.search-box input:focus { border-color: var(--ink); outline: none; }
+.suggestions {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(20, 35, 58, 0.2);
+}
+.suggestions li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.suggestions li.on,
+.suggestions li:hover { background: #e4edf3; }
+.s-label { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.s-kind { flex: none; font-size: 13px; color: var(--muted); }
 
 .pills.wrap,
 .when .pills { flex-wrap: wrap; overflow: visible; }
@@ -686,7 +788,7 @@ a.chip:hover { background: var(--ink); color: #fff; }
 /* phones: the keyboard's Go button searches, so the box gets the room */
 @media (max-width: 959px) {
   .search button { display: none; }
-  .search input { height: 46px; }
+  .search-box input { height: 46px; }
 }
 
 /* while new results load */

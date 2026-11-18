@@ -35,7 +35,9 @@ export function AppliedFilters({ f, day, range, children }: {
       href: go({ times: [], weekendAny: false }),
     });
   }
-  if (f.neighborhood) chips.push({ key: "hood", label: f.neighborhood, href: go({ neighborhood: "" }) });
+  for (const h of f.neighborhoods) {
+    chips.push({ key: `h-${h}`, label: h, href: go({ neighborhoods: f.neighborhoods.filter((x) => x !== h) }) });
+  }
   if (f.q) chips.push({ key: "q", label: `“${f.q}”`, href: go({ q: "" }) });
 
   const removable = chips.filter((c) => c.href).length;
@@ -56,7 +58,7 @@ export function AppliedFilters({ f, day, range, children }: {
         {removable > 1 ? (
           <li>
             <Link
-              href={go({ categories: [], price: "any", times: [], weekendAny: false, neighborhood: "", q: "" })}
+              href={go({ categories: [], price: "any", times: [], weekendAny: false, neighborhoods: [], q: "" })}
               scroll={false}
               className="chip clear-all"
             >

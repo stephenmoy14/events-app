@@ -2,12 +2,15 @@ import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { PRICE_OPTIONS, TIME_OPTIONS, WHEN_OPTIONS } from "@/lib/dates";
 import { type Filters, hrefWith, PAGE_SIZE } from "@/lib/events";
+import { groupAreas } from "@/lib/neighborhoods";
+import { AreaPicker } from "./area-picker";
 import { AutoSubmit } from "./auto-submit";
+import { SearchBox } from "./search-box";
 import { OpenOnWide, SheetDone } from "./open-on-wide";
 
 /** How many filters beyond "When" are on (for the Filters button badge). */
 export function activeCount(f: Filters): number {
-  return f.categories.length + (f.price !== "any" ? 1 : 0) + (f.times.length ? 1 : 0) + (f.neighborhood ? 1 : 0);
+  return f.categories.length + (f.price !== "any" ? 1 : 0) + (f.times.length ? 1 : 0) + f.neighborhoods.length;
 }
 
 /**
@@ -33,8 +36,7 @@ export function FilterForm({ filters, day, neighborhoods, calendar, total }: {
 
       <div className="toolbar" key={`t-${k}`}>
         <div className="search">
-          <label htmlFor="q" className="visually-hidden">Search events, venues or neighborhoods</label>
-          <input id="q" name="q" type="search" defaultValue={filters.q} placeholder="Search: jazz, Thalia Hall, Pilsen" />
+          <SearchBox defaultValue={filters.q} />
           <button type="submit">Search</button>
         </div>
       </div>
@@ -119,17 +121,10 @@ export function FilterForm({ filters, day, neighborhoods, calendar, total }: {
           </fieldset>
 
           {neighborhoods.length > 0 && (
-            <div className="section hood-field">
-              <label htmlFor="hood" className="legend">Where</label>
-              <div className="hood">
-                <select id="hood" name="hood" defaultValue={filters.neighborhood}>
-                  <option value="">Any neighborhood</option>
-                  {neighborhoods.map((x) => (
-                    <option key={x} value={x}>{x}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <fieldset className="section hood-field">
+              <legend>Where</legend>
+              <AreaPicker groups={groupAreas(neighborhoods)} selected={filters.neighborhoods} />
+            </fieldset>
           )}
         </div>
         <OpenOnWide detailsId="filter-sheet" />

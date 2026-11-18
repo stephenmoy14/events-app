@@ -23,6 +23,13 @@ const shots = [
   ["mobile-menu", phone, "/?when=week", false, async (p) => { await p.click(".event .ev-menu > summary"); await p.waitForTimeout(150); }],
   ["mobile-saved-nudge", phone, "/?when=week", false, async (p) => { await p.click(".event .save"); await p.waitForTimeout(300); }],
   ["mobile-event-page", phone, "/e/__FIRST__", false],
+  ["mobile-calendar-open", phone, "/?when=custom", false, async (p) => { await openSheet(p); }],
+  ["mobile-calendar-picking", phone, "/?when=custom&from=__DAY2__&to=__DAY2__&pick=1", false, async (p) => { await openSheet(p); }],
+  ["mobile-calendar-picked", phone, "/?when=custom&from=__DAY2__&to=__DAY6__", false, async (p) => { await openSheet(p); }],
+  ["mobile-where", phone, "/?when=week&hood=Lower%20West%20Side", false, async (p) => { await openSheet(p); await p.evaluate(() => document.querySelector(".hood-field").scrollIntoView()); }],
+  ["mobile-suggest", phone, "/?when=week", false, async (p) => { await p.fill("#q", "pil"); await p.waitForTimeout(800); }],
+  ["mobile-search", phone, "/?when=week&q=jazz", false],
+  ["mobile-pilsen", phone, "/?when=week&q=pilsen", false],
 ];
 
 const dayN = (n) => new Date(Date.now() + n * 86400_000).toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
