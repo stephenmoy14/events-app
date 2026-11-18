@@ -6,6 +6,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { type Account, filtersQuery, getAccount } from "@/lib/account";
 import { AccountBar } from "./account-bar";
+import { SaveNudge } from "./account-extras";
 import { EventItem } from "./event-item";
 import { AppliedFilters } from "./applied";
 import { FilterForm } from "./filters";
@@ -124,6 +125,8 @@ export default async function Page({ searchParams }: Props) {
 
         <DayPager f={filters} days={days} day={day} today={today} />
       </main>
+
+      {!account.user ? <SaveNudge next={here} /> : null}
 
       <footer className="colophon">
         <p>

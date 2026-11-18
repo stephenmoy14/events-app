@@ -20,13 +20,20 @@ const shots = [
   ["mobile-sheet-lower", phone, "/?when=week&cat=music", false, async (p) => { await openSheet(p); await p.evaluate(() => document.querySelector(".sheet-body").scrollTo(0, 700)); }],
   ["mobile-custom-sheet", phone, "/?when=custom&from=__DAY2__&to=__DAY6__", false, openSheet],
   ["mobile-login", phone, "/login", false],
+  ["mobile-menu", phone, "/?when=week", false, async (p) => { await p.click(".event .ev-menu > summary"); await p.waitForTimeout(150); }],
+  ["mobile-saved-nudge", phone, "/?when=week", false, async (p) => { await p.click(".event .save"); await p.waitForTimeout(300); }],
+  ["mobile-event-page", phone, "/e/__FIRST__", false],
 ];
 
 const dayN = (n) => new Date(Date.now() + n * 86400_000).toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
 const browser = await chromium.launch();
 for (const [name, viewport, path, fullPage, action] of shots) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: 1 });
-  const url = path.replace("__DAY2__", dayN(2)).replace("__DAY4__", dayN(4)).replace("__DAY6__", dayN(6));
+  let url = path.replace("__DAY2__", dayN(2)).replace("__DAY4__", dayN(4)).replace("__DAY6__", dayN(6));
+  if (url.includes("__FIRST__")) {
+    const j = await (await fetch(base + "/api/events?when=week")).json();
+    url = url.replace("__FIRST__", j.events?.[0]?.id ?? "none");
+  }
   await page.goto(base + url, { waitUntil: "networkidle" });
   if (action) await action(page);
   await page.waitForTimeout(200);

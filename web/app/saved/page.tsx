@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
 import { getSavedEvents } from "@/lib/account";
 import { chicagoDate, chicagoMidnight, TZ } from "@/lib/dates";
 import { dayLabel } from "../day-strip";
 import { EventItem } from "../event-item";
 import { AccountBar } from "../account-bar";
+import { LocalSaved } from "./local-saved";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,28 @@ const longDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long",
 
 export default async function Saved() {
   const { user, events, savedCount } = await getSavedEvents();
-  if (!user) redirect("/login?next=/saved");
+  if (!user) {
+    // Not signed in: show what's saved on this device, and why an account helps.
+    return (
+      <div className="shell narrow">
+        <header className="masthead">
+          <AccountBar user={null} savedCount={0} back="/saved" />
+          <h1>
+            <a className="city home" href="/">Chicago</a>
+            <span className="span">saved</span>
+          </h1>
+          <div className="stripes" aria-hidden="true" />
+        </header>
+        <main className="line-area">
+          <LocalSaved />
+          <p className="signin-pitch">
+            These are saved on this device only. <a href="/login?next=/saved">Sign in</a> to keep them on your phone and
+            computer, and to save your usual filters.
+          </p>
+        </main>
+      </div>
+    );
+  }
   const today = chicagoDate(new Date());
   const byDay = new Map<string, typeof events>();
   for (const e of events) {

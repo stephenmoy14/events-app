@@ -16,6 +16,23 @@ export async function GET() {
 export async function POST(request: Request) {
   const isJson = request.headers.get("content-type")?.includes("application/json");
   const body = isJson ? await request.json() : Object.fromEntries((await request.formData()).entries());
+
+  // Bulk save (moving device saves into the account after sign-in).
+  if (isJson && Array.isArray(body.event_ids)) {
+    const { supabase, user } = await currentUser();
+    if (!supabase || !user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+    const ids = (body.event_ids as unknown[]).filter((x): x is string => typeof x === "string" && /^[0-9a-f-]{36}$/i.test(x)).slice(0, 500);
+    if (!ids.length) return NextResponse.json({ saved: 0 });
+    // Only events that still exist (old device saves may point at removed listings).
+    const { data: existing } = await supabase.from("events").select("id").in("id", ids);
+    const rows = (existing ?? []).map((r) => ({ user_id: user.id, event_id: r.id as string }));
+    if (rows.length) {
+      const { error } = await supabase.from("saved_events").upsert(rows, { onConflict: "user_id,event_id", ignoreDuplicates: true });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ saved: rows.length });
+  }
+
   const eventId = String(body.event_id ?? "");
   const origin = new URL(request.url).origin;
   const back = safeBack(body.back as string);

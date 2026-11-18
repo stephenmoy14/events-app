@@ -8,7 +8,15 @@ const ERRORS: Record<string, string> = {
   email: "That doesn’t look like an email address.",
   link: "That sign-in link didn’t work. Links expire after an hour and only work once, in the same browser that asked for it. Send a new one below.",
   setup: "Sign-in isn’t set up on this site yet.",
+  rate: "Too many sign-in emails have gone out in the last hour. Try again in a little while",
+  google: "Google sign-in didn’t finish. Try again, or use your email.",
 };
+const GOOGLE = process.env.AUTH_GOOGLE === "on";
+
+function errorText(code: string): string {
+  if (/rate limit/i.test(code)) return ERRORS.rate + (GOOGLE ? ", or continue with Google." : ".");
+  return ERRORS[code] ?? code;
+}
 
 export default async function Login({ searchParams }: Props) {
   const p = await searchParams;
@@ -41,8 +49,14 @@ export default async function Login({ searchParams }: Props) {
         ) : (
           <>
             <h2>Sign in to save events</h2>
-            <p>Save events you’re interested in and keep your favorite filters. No password: we email you a link.</p>
-            {p.error ? <p className="error" role="alert">{ERRORS[p.error] ?? p.error}</p> : null}
+            <p>Keep saved events on your phone and computer, and open the site with your usual filters. No password needed.</p>
+            {p.error ? <p className="error" role="alert">{errorText(p.error)}</p> : null}
+            {GOOGLE ? (
+              <>
+                <a className="google" href={`/auth/google?next=${encodeURIComponent(next)}`}>Continue with Google</a>
+                <p className="or">or get a link by email</p>
+              </>
+            ) : null}
             <SignInForm next={next} label="Email me a sign-in link" />
           </>
         )}

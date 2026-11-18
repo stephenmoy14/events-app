@@ -1,6 +1,10 @@
 import { category, SOURCE_NAMES } from "@/lib/categories";
 import { chicagoDate, formatTime, isAllDay, TZ } from "@/lib/dates";
+import { googleCalendarUrl } from "@/lib/calendar-links";
 import type { EventRow } from "@/lib/events";
+import { SITE_URL } from "@/lib/site";
+import { EventMenu } from "./event-menu";
+import { SaveStar } from "./save-star";
 
 const shortDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
 
@@ -43,41 +47,17 @@ export function EventItem({ e, untilFor, save }: {
           <span className="src">via {SOURCE_NAMES[e.source_name] ?? e.source_name}</span>
         </p>
       </div>
-      {save ? <SaveButton id={e.id} title={e.title} {...save} /> : null}
+      <div className="ev-actions">
+        {save ? <SaveStar id={e.id} title={e.title} signedIn={save.signedIn} initialSaved={save.saved} /> : null}
+        <EventMenu
+          id={e.id}
+          title={e.title}
+          googleUrl={googleCalendarUrl(e, `${SITE_URL}/e/${e.id}`)}
+          sourceUrl={e.url}
+          sourceName={SOURCE_NAMES[e.source_name] ?? e.source_name}
+        />
+      </div>
     </li>
-  );
-}
-
-function SaveButton({ id, title, signedIn, saved, back }: { id: string; title: string; signedIn: boolean; saved: boolean; back: string }) {
-  if (!signedIn) {
-    return (
-      <a className="save" href={`/login?next=${encodeURIComponent(back)}`} aria-label={`Sign in to save ${title}`}>
-        <StarIcon filled={false} />
-      </a>
-    );
-  }
-  return (
-    <form className="save-form" method="post" action="/api/saved">
-      <input type="hidden" name="event_id" value={id} />
-      <input type="hidden" name="back" value={back} />
-      <button className={saved ? "save on" : "save"} type="submit" aria-pressed={saved} aria-label={saved ? `Unsave ${title}` : `Save ${title}`}>
-        <StarIcon filled={saved} />
-      </button>
-    </form>
-  );
-}
-
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
-      <path
-        d="M24 3l5.3 12.3 13.3-1.5-8 10.7 8 10.7-13.3-1.5L24 46l-5.3-12.3-13.3 1.5 8-10.7-8-10.7 13.3 1.5z"
-        fill={filled ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth="3.5"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 

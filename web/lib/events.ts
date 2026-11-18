@@ -276,3 +276,19 @@ function sampleView(f: Filters, now: Date, today: string, days: string[], day: s
   return { today, days, day, counts, events: events.slice(0, f.limit), total: events.length, rangeTotal, sample: true };
 }
 
+
+
+/** Upcoming events by id (for device saves, event pages and calendar files). */
+export async function getEventsByIds(ids: string[]): Promise<EventRow[]> {
+  const clean = ids.filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+  if (!clean.length) return [];
+  const cfg = supabaseConfig();
+  if (!cfg) {
+    const view = await getDayView({ ...parseFilters({ when: "month" }), limit: 500 });
+    return view.events.filter((e) => clean.includes(e.id));
+  }
+  const qs = new URLSearchParams({ select: COLUMNS, id: `in.(${clean.join(",")})`, order: "start_at.asc" });
+  const res = await fetch(`${cfg.url}/rest/v1/upcoming_events?${qs}`, { headers: { apikey: cfg.key }, cache: "no-store" });
+  if (!res.ok) throw new LoadError(res.status, await res.text());
+  return (await res.json()) as EventRow[];
+}
