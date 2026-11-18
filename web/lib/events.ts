@@ -280,13 +280,19 @@ function sampleView(f: Filters, now: Date, today: string, days: string[], day: s
 
 /** Upcoming events by id (for device saves, event pages and calendar files). */
 export async function getEventsByIds(ids: string[]): Promise<EventRow[]> {
-  const clean = ids.filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
-  if (!clean.length) return [];
   const cfg = supabaseConfig();
   if (!cfg) {
-    const view = await getDayView({ ...parseFilters({ when: "month" }), limit: 500 });
-    return view.events.filter((e) => clean.includes(e.id));
+    // Sample mode: look through each day of the sample.
+    const found = new Map<string, EventRow>();
+    for (let i = 0; i < 10; i++) {
+      const d = addDays(chicagoDate(new Date()), i);
+      const view = await getDayView({ ...parseFilters({ when: "month", day: d }), limit: 500 });
+      for (const e of view.events) if (ids.includes(e.id)) found.set(e.id, e);
+    }
+    return [...found.values()];
   }
+  const clean = ids.filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+  if (!clean.length) return [];
   const qs = new URLSearchParams({ select: COLUMNS, id: `in.(${clean.join(",")})`, order: "start_at.asc" });
   const res = await fetch(`${cfg.url}/rest/v1/upcoming_events?${qs}`, { headers: { apikey: cfg.key }, cache: "no-store" });
   if (!res.ok) throw new LoadError(res.status, await res.text());
